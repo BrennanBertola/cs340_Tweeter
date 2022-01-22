@@ -16,7 +16,7 @@ import edu.byu.cs.tweeter.util.Pair;
 /**
  * Background task that retrieves a page of followers.
  */
-public class GetFollowersTask implements Runnable {
+public class GetFollowersTask extends BackgroundTask {
     private static final String LOG_TAG = "GetFollowersTask";
 
     public static final String SUCCESS_KEY = "success";
@@ -50,6 +50,7 @@ public class GetFollowersTask implements Runnable {
 
     public GetFollowersTask(AuthToken authToken, User targetUser, int limit, User lastFollower,
                             Handler messageHandler) {
+        super(messageHandler);
         this.authToken = authToken;
         this.targetUser = targetUser;
         this.limit = limit;
@@ -58,7 +59,7 @@ public class GetFollowersTask implements Runnable {
     }
 
     @Override
-    public void run() {
+    protected void runTask() {
         try {
             Pair<List<User>, Boolean> pageOfUsers = getFollowers();
 
@@ -87,28 +88,6 @@ public class GetFollowersTask implements Runnable {
         msgBundle.putBoolean(SUCCESS_KEY, true);
         msgBundle.putSerializable(FOLLOWERS_KEY, (Serializable) followers);
         msgBundle.putBoolean(MORE_PAGES_KEY, hasMorePages);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendFailedMessage(String message) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putString(MESSAGE_KEY, message);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendExceptionMessage(Exception exception) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putSerializable(EXCEPTION_KEY, exception);
 
         Message msg = Message.obtain();
         msg.setData(msgBundle);

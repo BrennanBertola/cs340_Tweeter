@@ -12,7 +12,7 @@ import edu.byu.cs.tweeter.util.FakeData;
 /**
  * Background task that returns the profile for a specified user.
  */
-public class GetUserTask implements Runnable {
+public class GetUserTask extends BackgroundTask {
     private static final String LOG_TAG = "GetUserTask";
 
     public static final String SUCCESS_KEY = "success";
@@ -34,13 +34,14 @@ public class GetUserTask implements Runnable {
     private Handler messageHandler;
 
     public GetUserTask(AuthToken authToken, String alias, Handler messageHandler) {
+        super(messageHandler);
         this.authToken = authToken;
         this.alias = alias;
         this.messageHandler = messageHandler;
     }
 
     @Override
-    public void run() {
+    protected void runTask() {
         try {
             User user = getUser();
 
@@ -65,28 +66,6 @@ public class GetUserTask implements Runnable {
         Bundle msgBundle = new Bundle();
         msgBundle.putBoolean(SUCCESS_KEY, true);
         msgBundle.putSerializable(USER_KEY, user);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendFailedMessage(String message) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putString(MESSAGE_KEY, message);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendExceptionMessage(Exception exception) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putSerializable(EXCEPTION_KEY, exception);
 
         Message msg = Message.obtain();
         msg.setData(msgBundle);

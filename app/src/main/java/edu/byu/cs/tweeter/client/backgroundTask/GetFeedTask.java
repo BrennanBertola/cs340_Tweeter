@@ -17,7 +17,7 @@ import edu.byu.cs.tweeter.util.Pair;
 /**
  * Background task that retrieves a page of statuses from a user's feed.
  */
-public class GetFeedTask implements Runnable {
+public class GetFeedTask extends BackgroundTask{
     private static final String LOG_TAG = "GetFeedTask";
 
     public static final String SUCCESS_KEY = "success";
@@ -51,6 +51,7 @@ public class GetFeedTask implements Runnable {
 
     public GetFeedTask(AuthToken authToken, User targetUser, int limit, Status lastStatus,
                        Handler messageHandler) {
+        super(messageHandler);
         this.authToken = authToken;
         this.targetUser = targetUser;
         this.limit = limit;
@@ -59,7 +60,7 @@ public class GetFeedTask implements Runnable {
     }
 
     @Override
-    public void run() {
+    protected void runTask() {
         try {
             Pair<List<Status>, Boolean> pageOfStatus = getFeed();
 
@@ -88,28 +89,6 @@ public class GetFeedTask implements Runnable {
         msgBundle.putBoolean(SUCCESS_KEY, true);
         msgBundle.putSerializable(STATUSES_KEY, (Serializable) statuses);
         msgBundle.putBoolean(MORE_PAGES_KEY, hasMorePages);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendFailedMessage(String message) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putString(MESSAGE_KEY, message);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendExceptionMessage(Exception exception) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putSerializable(EXCEPTION_KEY, exception);
 
         Message msg = Message.obtain();
         msg.setData(msgBundle);
