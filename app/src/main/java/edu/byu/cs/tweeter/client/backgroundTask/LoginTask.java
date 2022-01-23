@@ -13,7 +13,7 @@ import edu.byu.cs.tweeter.util.Pair;
 /**
  * Background task that logs in a user (i.e., starts a session).
  */
-public class LoginTask implements Runnable {
+public class LoginTask extends BackgroundTask {
 
     private static final String LOG_TAG = "LoginTask";
 
@@ -37,13 +37,14 @@ public class LoginTask implements Runnable {
     private Handler messageHandler;
 
     public LoginTask(String username, String password, Handler messageHandler) {
+        super(messageHandler);
         this.username = username;
         this.password = password;
         this.messageHandler = messageHandler;
     }
 
     @Override
-    public void run() {
+    protected void runTask() {
         try {
             Pair<User, AuthToken> loginResult = doLogin();
 
@@ -73,28 +74,6 @@ public class LoginTask implements Runnable {
         msgBundle.putBoolean(SUCCESS_KEY, true);
         msgBundle.putSerializable(USER_KEY, loggedInUser);
         msgBundle.putSerializable(AUTH_TOKEN_KEY, authToken);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendFailedMessage(String message) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putString(MESSAGE_KEY, message);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendExceptionMessage(Exception exception) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putSerializable(EXCEPTION_KEY, exception);
 
         Message msg = Message.obtain();
         msg.setData(msgBundle);

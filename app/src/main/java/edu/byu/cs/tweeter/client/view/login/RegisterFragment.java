@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import edu.byu.cs.client.R;
 import edu.byu.cs.tweeter.client.backgroundTask.RegisterTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
+import edu.byu.cs.tweeter.client.presenter.RegisterPresenter;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
@@ -36,7 +37,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 /**
  * Implements the register screen.
  */
-public class RegisterFragment extends Fragment {
+public class RegisterFragment extends Fragment implements RegisterPresenter.View {
     private static final String LOG_TAG = "RegisterFragment";
     private static final int RESULT_IMAGE = 10;
 
@@ -50,6 +51,8 @@ public class RegisterFragment extends Fragment {
     private TextView errorView;
     private Toast registeringToast;
 
+    private RegisterPresenter presenter;
+
     /**
      * Creates an instance of the fragment and places the user and auth token in an arguments
      * bundle assigned to the fragment.
@@ -62,9 +65,31 @@ public class RegisterFragment extends Fragment {
     }
 
     @Override
+    public void register(User user) {
+        Intent intent = new Intent(getContext(), MainActivity.class);
+        intent.putExtra(MainActivity.CURRENT_USER_KEY, user);
+
+        registeringToast.cancel();
+
+        Toast.makeText(getContext(), "Hello " + Cache.getInstance().getCurrUser().getName(), Toast.LENGTH_LONG).show();
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Override
+    public void displayErrorMessage(String msg) {
+        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_register, container, false);
+
+        presenter = new RegisterPresenter(this);
 
         firstName = view.findViewById(R.id.registerFirstName);
         lastName = view.findViewById(R.id.registerLastName);
@@ -102,12 +127,10 @@ public class RegisterFragment extends Fragment {
                     // Intentionally, Use the java Base64 encoder so it is compatible with M4.
                     String imageBytesBase64 = Base64.getEncoder().encodeToString(imageBytes);
 
-                    // Send register request.
-                    RegisterTask registerTask = new RegisterTask(firstName.getText().toString(), lastName.getText().toString(),
-                            alias.getText().toString(), password.getText().toString(), imageBytesBase64, new RegisterHandler());
+                    presenter.register(firstName.getText().toString(), lastName.getText().toString(),
+                            alias.getText().toString(), password.getText().toString(),
+                            imageBytesBase64);
 
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.execute(registerTask);
                 } catch (Exception e) {
                     errorView.setText(e.getMessage());
                 }
