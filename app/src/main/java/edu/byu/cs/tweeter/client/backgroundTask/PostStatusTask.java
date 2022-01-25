@@ -11,7 +11,7 @@ import edu.byu.cs.tweeter.model.domain.Status;
 /**
  * Background task that posts a new status sent by a user.
  */
-public class PostStatusTask implements Runnable {
+public class PostStatusTask extends BackgroundTask {
     private static final String LOG_TAG = "PostStatusTask";
 
     public static final String SUCCESS_KEY = "success";
@@ -33,13 +33,14 @@ public class PostStatusTask implements Runnable {
     private Handler messageHandler;
 
     public PostStatusTask(AuthToken authToken, Status status, Handler messageHandler) {
+        super(messageHandler);
         this.authToken = authToken;
         this.status = status;
         this.messageHandler = messageHandler;
     }
 
     @Override
-    public void run() {
+    public void runTask() {
         try {
 
             sendSuccessMessage();
@@ -48,37 +49,5 @@ public class PostStatusTask implements Runnable {
             Log.e(LOG_TAG, ex.getMessage(), ex);
             sendExceptionMessage(ex);
         }
-    }
-
-    private void sendSuccessMessage() {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, true);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendFailedMessage(String message) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putString(MESSAGE_KEY, message);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendExceptionMessage(Exception exception) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putSerializable(EXCEPTION_KEY, exception);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
     }
 }

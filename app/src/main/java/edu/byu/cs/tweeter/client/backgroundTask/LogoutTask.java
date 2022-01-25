@@ -10,7 +10,7 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 /**
  * Background task that logs out a user (i.e., ends a session).
  */
-public class LogoutTask implements Runnable {
+public class LogoutTask extends BackgroundTask {
     private static final String LOG_TAG = "LogoutTask";
 
     public static final String SUCCESS_KEY = "success";
@@ -27,12 +27,13 @@ public class LogoutTask implements Runnable {
     private Handler messageHandler;
 
     public LogoutTask(AuthToken authToken, Handler messageHandler) {
+        super(messageHandler);
         this.authToken = authToken;
         this.messageHandler = messageHandler;
     }
 
     @Override
-    public void run() {
+    public void runTask() {
         try {
 
             sendSuccessMessage();
@@ -41,37 +42,5 @@ public class LogoutTask implements Runnable {
             Log.e(LOG_TAG, ex.getMessage(), ex);
             sendExceptionMessage(ex);
         }
-    }
-
-    private void sendSuccessMessage() {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, true);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendFailedMessage(String message) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putString(MESSAGE_KEY, message);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendExceptionMessage(Exception exception) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putSerializable(EXCEPTION_KEY, exception);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
     }
 }

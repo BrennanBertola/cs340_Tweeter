@@ -13,7 +13,7 @@ import edu.byu.cs.tweeter.util.Pair;
 /**
  * Background task that creates a new user account and logs in the new user (i.e., starts a session).
  */
-public class RegisterTask implements Runnable {
+public class RegisterTask extends BackgroundTask {
     private static final String LOG_TAG = "RegisterTask";
 
     public static final String SUCCESS_KEY = "success";
@@ -49,6 +49,7 @@ public class RegisterTask implements Runnable {
 
     public RegisterTask(String firstName, String lastName, String username, String password,
                         String image, Handler messageHandler) {
+        super(messageHandler);
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
@@ -58,7 +59,7 @@ public class RegisterTask implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void runTask() {
         try {
             Pair<User, AuthToken> registerResult = doRegister();
 
@@ -88,28 +89,6 @@ public class RegisterTask implements Runnable {
         msgBundle.putBoolean(SUCCESS_KEY, true);
         msgBundle.putSerializable(USER_KEY, registeredUser);
         msgBundle.putSerializable(AUTH_TOKEN_KEY, authToken);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendFailedMessage(String message) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putString(MESSAGE_KEY, message);
-
-        Message msg = Message.obtain();
-        msg.setData(msgBundle);
-
-        messageHandler.sendMessage(msg);
-    }
-
-    private void sendExceptionMessage(Exception exception) {
-        Bundle msgBundle = new Bundle();
-        msgBundle.putBoolean(SUCCESS_KEY, false);
-        msgBundle.putSerializable(EXCEPTION_KEY, exception);
 
         Message msg = Message.obtain();
         msg.setData(msgBundle);
