@@ -4,6 +4,7 @@ import android.util.Log;
 
 import edu.byu.cs.tweeter.client.service.MainService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
+import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class MainPresenter implements MainService.Observer {
@@ -15,8 +16,11 @@ public class MainPresenter implements MainService.Observer {
         void follow();
         void unfollow();
         void updateFollowButton();
+        void logout();
+        void postDone();
         void updateFollowerCount(int count);
         void updateFollowingCount(int count);
+        void isFollower(boolean isFollower);
         void displayErrorMessage(String message);
     }
 
@@ -35,6 +39,16 @@ public class MainPresenter implements MainService.Observer {
     }
 
     @Override
+    public void handlePostSuccess() {
+        view.postDone();
+    }
+
+    @Override
+    public void handleLogoutSuccess() {
+        view.logout();
+    }
+
+    @Override
     public void handleFollowerCountSuccess(int count) {
         view.updateFollowerCount(count);
     }
@@ -42,6 +56,11 @@ public class MainPresenter implements MainService.Observer {
     @Override
     public void handleFollowingCountSuccess(int count) {
         view.updateFollowingCount(count);
+    }
+
+    @Override
+    public void handleIsFollowerSuccess(boolean isFollower) {
+        view.isFollower(isFollower);
     }
 
     @Override
@@ -68,8 +87,20 @@ public class MainPresenter implements MainService.Observer {
         getMainService().getFollowerCount(authToken, user, this);
     }
 
-    public void getFollowingCOunt (AuthToken authToken, User user) {
+    public void getFollowingCount (AuthToken authToken, User user) {
         getMainService().getFollowingCount(authToken, user, this);
+    }
+
+    public void logout (AuthToken authToken) {
+        getMainService().logout(authToken, this);
+    }
+
+    public void getFollowStatus (AuthToken authToken, User user, User selected) {
+        getMainService().isFollower(authToken, user, selected, this);
+    }
+
+    public void post(AuthToken authToken, Status status) {
+        getMainService().post(authToken, status, this);
     }
 
     public MainService getMainService() {return new MainService();}

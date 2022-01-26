@@ -8,8 +8,12 @@ import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTaskUtils;
 import edu.byu.cs.tweeter.client.backgroundTask.FollowTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFollowersCountTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFollowingCountTask;
+import edu.byu.cs.tweeter.client.backgroundTask.IsFollowerTask;
+import edu.byu.cs.tweeter.client.backgroundTask.LogoutTask;
+import edu.byu.cs.tweeter.client.backgroundTask.PostStatusTask;
 import edu.byu.cs.tweeter.client.backgroundTask.UnfollowTask;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
+import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class MainService {
@@ -17,8 +21,11 @@ public class MainService {
     public interface Observer {
         void handleFollowSuccess();
         void handleUnfollowSuccess();
+        void handlePostSuccess();
+        void handleLogoutSuccess();
         void handleFollowerCountSuccess(int count);
         void handleFollowingCountSuccess(int count);
+        void handleIsFollowerSuccess(boolean isFollower);
         void handleFailure(String message);
         void handleException(String message, Exception ex);
     }
@@ -45,16 +52,46 @@ public class MainService {
         GetFollowersCountTask task = getGetFollowersCountTask(authToken, user, observer);
         BackgroundTaskUtils.runTask(task);
     }
-    public GetFollowersCountTask getGetFollowersCountTask (AuthToken authToken, User user, Observer observer) {
-        return new GetFollowersCountTask(authToken, user, new MessageHandler(observer, "followerCount"));
+    public GetFollowersCountTask getGetFollowersCountTask (AuthToken authToken, User user,
+                                                           Observer observer) {
+        return new GetFollowersCountTask(authToken, user, new MessageHandler(observer,
+                "followerCount"));
     }
 
     public void getFollowingCount(AuthToken authToken, User user, Observer observer) {
         GetFollowingCountTask task = getGetFollowingCountTask(authToken, user, observer);
         BackgroundTaskUtils.runTask(task);
     }
-    public GetFollowingCountTask getGetFollowingCountTask (AuthToken authToken, User user, Observer observer) {
-        return new GetFollowingCountTask(authToken, user, new MessageHandler(observer, "followingCount"));
+    public GetFollowingCountTask getGetFollowingCountTask (AuthToken authToken, User user,
+                                                           Observer observer) {
+        return new GetFollowingCountTask(authToken, user, new MessageHandler(observer,
+                "followingCount"));
+    }
+
+    public void logout(AuthToken authToken, Observer observer) {
+        LogoutTask task = getLogoutTask(authToken, observer);
+        BackgroundTaskUtils.runTask(task);
+    }
+    public LogoutTask getLogoutTask(AuthToken authToken, Observer observer) {
+        return new LogoutTask(authToken, new MessageHandler(observer, "logout"));
+    }
+
+    public void isFollower(AuthToken authToken, User user, User selected, Observer observer) {
+        IsFollowerTask task = getIsFollowerTask(authToken, user, selected, observer);
+        BackgroundTaskUtils.runTask(task);
+    }
+    public IsFollowerTask getIsFollowerTask(AuthToken authToken, User user, User selected,
+                                            Observer observer) {
+        return new IsFollowerTask(authToken, user, selected, new MessageHandler(observer,
+                "isFollower"));
+    }
+
+    public void post (AuthToken authToken, Status status, Observer observer) {
+        PostStatusTask task = getPostStatusTask(authToken, status, observer);
+        BackgroundTaskUtils.runTask(task);
+    }
+    public PostStatusTask getPostStatusTask(AuthToken authToken, Status status, Observer observer) {
+        return new PostStatusTask(authToken, status, new MessageHandler(observer, "post"));
     }
 
     public class MessageHandler extends Handler {
@@ -85,7 +122,7 @@ public class MainService {
                 }
             }
 
-            if (type == "unfollow") {
+            else if (type == "unfollow") {
                 boolean success = bundle.getBoolean(UnfollowTask.SUCCESS_KEY);
                 if (success) {
                     observer.handleUnfollowSuccess();
@@ -101,7 +138,7 @@ public class MainService {
                 }
             }
 
-            if (type == "followerCount") {
+            else if (type == "followerCount") {
                 boolean success = bundle.getBoolean(GetFollowersCountTask.SUCCESS_KEY);
                 if (success) {
                     int count = msg.getData().getInt(GetFollowersCountTask.COUNT_KEY);
@@ -118,7 +155,7 @@ public class MainService {
                 }
             }
 
-            if (type == "followingCount") {
+            else if (type == "followingCount") {
                 boolean success = bundle.getBoolean(GetFollowingCountTask.SUCCESS_KEY);
                 if (success) {
                     int count = msg.getData().getInt(GetFollowingCountTask.COUNT_KEY);
@@ -131,6 +168,55 @@ public class MainService {
                 else if (msg.getData().containsKey(GetFollowingCountTask.EXCEPTION_KEY)) {
                     Exception ex = (Exception) msg.getData().getSerializable( GetFollowingCountTask.EXCEPTION_KEY);
                     String eMsg = "Failed to following count because of exception: " + ex.getMessage();
+                    observer.handleException(eMsg, ex);
+                }
+            }
+
+            else if (type == "logout") {
+                boolean success = bundle.getBoolean(LogoutTask.SUCCESS_KEY);
+                if (success) {
+                    observer.handleLogoutSuccess();
+                }
+                else if (msg.getData().containsKey(LogoutTask.MESSAGE_KEY)) {
+                    String eMsg = msg.getData().getString(LogoutTask.MESSAGE_KEY);
+                    observer.handleFailure("Failed to logout: " + eMsg);
+                }
+                else if (msg.getData().containsKey(LogoutTask.EXCEPTION_KEY)) {
+                    Exception ex = (Exception) msg.getData().getSerializable(LogoutTask.EXCEPTION_KEY);
+                    String eMsg = "Failed to logout because of exception: " + ex.getMessage();
+                    observer.handleException(eMsg, ex);
+                }
+            }
+
+            else if (type == "isFollower") {
+                boolean success = bundle.getBoolean(IsFollowerTask.SUCCESS_KEY);
+                if (success) {
+                    boolean isFollower = msg.getData().getBoolean(IsFollowerTask.IS_FOLLOWER_KEY);
+                    observer.handleIsFollowerSuccess(isFollower);
+                }
+                else if (msg.getData().containsKey(IsFollowerTask.MESSAGE_KEY)) {
+                    String eMsg = msg.getData().getString(IsFollowerTask.MESSAGE_KEY);
+                    observer.handleFailure("Failed to get follow status: " + eMsg);
+                }
+                else if (msg.getData().containsKey(IsFollowerTask.EXCEPTION_KEY)) {
+                    Exception ex = (Exception) msg.getData().getSerializable(IsFollowerTask.EXCEPTION_KEY);
+                    String eMsg = "Failed to follow status because of exception: " + ex.getMessage();
+                    observer.handleException(eMsg, ex);
+                }
+            }
+
+            else if (type == "post") {
+                boolean success = bundle.getBoolean(PostStatusTask.SUCCESS_KEY);
+                if (success) {
+                    observer.handlePostSuccess();
+                }
+                else if (msg.getData().containsKey(PostStatusTask.MESSAGE_KEY)) {
+                    String eMsg = msg.getData().getString(PostStatusTask.MESSAGE_KEY);
+                    observer.handleFailure("Failed to get post status: " + eMsg);
+                }
+                else if (msg.getData().containsKey(PostStatusTask.EXCEPTION_KEY)) {
+                    Exception ex = (Exception) msg.getData().getSerializable(PostStatusTask.EXCEPTION_KEY);
+                    String eMsg = "Failed to post status because of exception: " + ex.getMessage();
                     observer.handleException(eMsg, ex);
                 }
             }

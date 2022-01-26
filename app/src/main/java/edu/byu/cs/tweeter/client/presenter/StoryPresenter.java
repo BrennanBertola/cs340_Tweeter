@@ -4,7 +4,6 @@ import android.util.Log;
 
 import java.util.List;
 
-import edu.byu.cs.tweeter.client.service.FeedService;
 import edu.byu.cs.tweeter.client.service.StoryService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;

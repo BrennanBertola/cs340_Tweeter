@@ -8,7 +8,6 @@ import android.os.Message;
 import java.util.List;
 
 import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTaskUtils;
-import edu.byu.cs.tweeter.client.backgroundTask.GetFeedTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
