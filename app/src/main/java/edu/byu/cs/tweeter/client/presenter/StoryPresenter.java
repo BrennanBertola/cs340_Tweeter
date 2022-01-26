@@ -151,6 +151,16 @@ public class StoryPresenter implements StoryService.Observer {
         getStoryService().getStory(authToken, targetUser, limit, lastStatus, this);
     }
 
+    public boolean loadMore(int visible, int first, int total) {
+        if (!isLoading() && isHasMorePages()) {
+            if ((visible + first) >=
+                    total && first >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public StoryService getStoryService() {
         return new StoryService();
     }

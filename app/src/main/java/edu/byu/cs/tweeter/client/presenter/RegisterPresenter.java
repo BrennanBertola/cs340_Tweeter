@@ -1,6 +1,7 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 import android.util.Log;
+import android.widget.ImageView;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.service.RegisterService;
@@ -44,6 +45,32 @@ public class RegisterPresenter implements RegisterService.Observer {
 
     public void register(String first, String last, String username, String password, String image) {
         getRegisterService().register(first, last, username, password, image, this);
+    }
+
+    public void validateRegistration(String firstName, String lastName, String alias,
+                                     String password, ImageView imageToUpload) throws IllegalArgumentException {
+        if (firstName.length() == 0) {
+            throw new IllegalArgumentException("First Name cannot be empty.");
+        }
+        if (lastName.length() == 0) {
+            throw new IllegalArgumentException("Last Name cannot be empty.");
+        }
+        if (alias.length() == 0) {
+            throw new IllegalArgumentException("Alias cannot be empty.");
+        }
+        if (alias.charAt(0) != '@') {
+            throw new IllegalArgumentException("Alias must begin with @.");
+        }
+        if (alias.length() < 2) {
+            throw new IllegalArgumentException("Alias must contain 1 or more characters after the @.");
+        }
+        if (password.length() == 0) {
+            throw new IllegalArgumentException("Password cannot be empty.");
+        }
+
+        if (imageToUpload.getDrawable() == null) {
+            throw new IllegalArgumentException("Profile image must be uploaded.");
+        }
     }
 
     public RegisterService getRegisterService() {return new RegisterService();}

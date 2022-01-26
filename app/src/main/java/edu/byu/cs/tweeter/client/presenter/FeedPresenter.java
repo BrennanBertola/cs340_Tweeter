@@ -152,6 +152,16 @@ public class FeedPresenter implements FeedService.Observer {
         getFeedService().getFeed(authToken, targetUser, limit, lastStatus, this);
     }
 
+    public boolean loadMore(int visible, int first, int total) {
+        if (!isLoading() && isHasMorePages()) {
+            if ((visible + first) >=
+                    total && first >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public FeedService getFeedService() {
         return new FeedService();
     }

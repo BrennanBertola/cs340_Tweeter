@@ -150,6 +150,16 @@ public class FollowingPresenter implements FollowingService.Observer {
         getFollowingService().getFollowees(authToken, targetUser, limit, lastFollowee, this);
     }
 
+    public boolean loadMore(int visible, int first, int total) {
+        if (!isLoading() && isHasMorePages()) {
+            if ((visible + first) >=
+                    total && first >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public FollowingService getFollowingService() {
         return new FollowingService();
     }
