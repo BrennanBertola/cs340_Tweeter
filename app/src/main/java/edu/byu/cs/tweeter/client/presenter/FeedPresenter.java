@@ -5,12 +5,13 @@ import android.util.Log;
 
 import java.util.List;
 
-import edu.byu.cs.tweeter.client.service.FeedService;
+import edu.byu.cs.tweeter.client.service.StatusService;
+import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FeedPresenter implements FeedService.Observer {
+public class FeedPresenter implements StatusService.Observer, UserService.Observer {
 
     private static final String LOG_TAG = "FeedPresenter";
     public static final int PAGE_SIZE = 10;
@@ -36,6 +37,33 @@ public class FeedPresenter implements FeedService.Observer {
         this.authToken = authToken;
     }
 
+    //====== remove when fixing presenters ======//
+    @Override
+    public void handleLoginSuccess(User user, AuthToken authToken) {
+
+    }
+
+    @Override
+    public void handlePostSuccess() {
+
+    }
+
+    @Override
+    public void handleStorySuccess(List<Status> statuses, boolean hasMorePages) {
+
+    }
+
+    @Override
+    public void handleLogoutSuccess() {
+
+    }
+
+    @Override
+    public void handleRegisterSuccess(User user, AuthToken authToken) {
+
+    }
+    //========================================//
+
     @Override
     public void handleFeedSuccess(List<Status> statuses, boolean hasMorePages) {
         if (statuses.size() > 0) {
@@ -59,42 +87,19 @@ public class FeedPresenter implements FeedService.Observer {
     }
 
     @Override
-    public void handleFeedFailure(String message) {
-        String eMsg = "Failed to retrieve feed: " + message;
-        Log.e(LOG_TAG, eMsg);
-
+    public void handleFailure(String message) {
+        Log.e(LOG_TAG, message);
         view.setLoading(false);
-        view.displayErrorMessage(eMsg);
+        view.displayErrorMessage(message);
         setLoading(false);
     }
 
     @Override
-    public void handleUserFailure(String message) {
-        String eMsg = "Failed to retrieve user: " + message;
-        Log.e(LOG_TAG, eMsg);
+    public void handleException(String message, Exception exception) {
+        Log.e(LOG_TAG, message, exception);
 
         view.setLoading(false);
-        view.displayErrorMessage(eMsg);
-        setLoading(false);
-    }
-
-    @Override
-    public void handleFeedException(Exception exception) {
-        String errorMessage = "Failed to retrieve feed because of exception: " + exception.getMessage();
-        Log.e(LOG_TAG, errorMessage, exception);
-
-        view.setLoading(false);
-        view.displayErrorMessage(errorMessage);
-        setLoading(false);
-    }
-
-    @Override
-    public void handleUserException(Exception exception) {
-        String errorMessage = "Failed to retrieve user because of exception: " + exception.getMessage();
-        Log.e(LOG_TAG, errorMessage, exception);
-
-        view.setLoading(false);
-        view.displayErrorMessage(errorMessage);
+        view.displayErrorMessage(message);
         setLoading(false);
     }
 
@@ -145,11 +150,11 @@ public class FeedPresenter implements FeedService.Observer {
     }
 
     public void  getSelectedUser(AuthToken authToken, String alias) {
-        getFeedService().getSelectedUser(authToken, alias, this);
+        getUserService().getSelectedUser(authToken, alias, this);
     }
 
     public void getStatuses(AuthToken authToken, User targetUser, int limit, Status lastStatus) {
-        getFeedService().getFeed(authToken, targetUser, limit, lastStatus, this);
+        getStatusService().getFeed(authToken, targetUser, limit, lastStatus, this);
     }
 
     public boolean loadMore(int visible, int first, int total) {
@@ -162,7 +167,8 @@ public class FeedPresenter implements FeedService.Observer {
         return false;
     }
 
-    public FeedService getFeedService() {
-        return new FeedService();
+    public StatusService getStatusService() {
+        return new StatusService();
     }
+    public UserService getUserService() {return new UserService();}
 }

@@ -3,11 +3,11 @@ package edu.byu.cs.tweeter.client.presenter;
 import android.util.Log;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
-import edu.byu.cs.tweeter.client.service.LoginService;
+import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class LoginPresenter implements LoginService.Observer {
+public class LoginPresenter implements UserService.Observer {
     private static final String LOG_TAG = "LoginPresenter";
 
     private final View view;
@@ -21,6 +21,23 @@ public class LoginPresenter implements LoginService.Observer {
         this.view = view;
     }
 
+    //====== remove when fixing presenters ======//
+    @Override
+    public void handleUserSuccess(User user) {
+        //remove when fixing presenter
+    }
+
+    @Override
+    public void handleLogoutSuccess() {
+
+    }
+
+    @Override
+    public void handleRegisterSuccess(User user, AuthToken authToken) {
+
+    }
+    //========================================//
+
     @Override
     public void handleLoginSuccess(User user, AuthToken authToken) {
         Cache.getInstance().setCurrUser(user);
@@ -29,21 +46,19 @@ public class LoginPresenter implements LoginService.Observer {
     }
 
     @Override
-    public void handleLoginFailure(String message) {
-        String eMsg = "Failed to login: " + message;
-        Log.e(LOG_TAG, eMsg);
-        view.displayErrorMessage(eMsg);
+    public void handleFailure(String message) {
+        Log.e(LOG_TAG, message);
+        view.displayErrorMessage(message);
     }
 
     @Override
-    public void handleLoginException(Exception ex) {
-        String errorMessage = "Failed to login because of exception: " + ex.getMessage();
-        Log.e(LOG_TAG, errorMessage, ex);
-        view.displayErrorMessage(errorMessage);
+    public void handleException(String message, Exception ex) {
+        Log.e(LOG_TAG, message, ex);
+        view.displayErrorMessage(message);
     }
 
     public void login(String username, String password) {
-        getLoginService().login(username, password, this);
+        getUserService().login(username, password, this);
     }
 
     public void validateLogin(String alias, String password) throws IllegalArgumentException {
@@ -58,5 +73,5 @@ public class LoginPresenter implements LoginService.Observer {
         }
     }
 
-    public LoginService getLoginService() {return new LoginService();}
+    public UserService getUserService() {return new UserService();}
 }

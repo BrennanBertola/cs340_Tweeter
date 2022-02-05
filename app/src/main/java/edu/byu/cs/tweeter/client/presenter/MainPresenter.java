@@ -7,12 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
-import edu.byu.cs.tweeter.client.service.MainService;
+import edu.byu.cs.tweeter.client.service.FollowService;
+import edu.byu.cs.tweeter.client.service.StatusService;
+import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class MainPresenter implements MainService.Observer {
+public class MainPresenter implements UserService.Observer, FollowService.Observer, StatusService.Observer {
     private static final String LOG_TAG = "MainPresenter";
 
     private final View view;
@@ -31,6 +33,38 @@ public class MainPresenter implements MainService.Observer {
 
     public MainPresenter(View view) {this.view = view;}
 
+    //====== remove when fixing presenters ======//
+    @Override
+    public void handleFollowerSuccess(List<User> followers, boolean hasMorePages) {
+
+    }
+
+    @Override
+    public void handleFolloweeSuccess(List<User> followees, boolean hasMorePages) {
+
+    }
+
+    @Override
+    public void handleFeedSuccess(List<Status> statuses, boolean hasMorePages) {
+
+    }
+
+    @Override
+    public void handleUserSuccess(User user) {
+
+    }
+
+    @Override
+    public void handleStorySuccess(List<Status> statuses, boolean hasMorePages) {
+
+    }
+
+    @Override
+    public void handleLoginSuccess(User user, AuthToken authToken) {
+
+    }
+    //========================================//
+
     @Override
     public void handleFollowSuccess() {
         view.follow();
@@ -48,10 +82,17 @@ public class MainPresenter implements MainService.Observer {
         view.postDone();
     }
 
+
+
     @Override
     public void handleLogoutSuccess() {
         Cache.getInstance().clearCache();
         view.logout();
+    }
+
+    @Override
+    public void handleRegisterSuccess(User user, AuthToken authToken) {
+
     }
 
     @Override
@@ -82,31 +123,31 @@ public class MainPresenter implements MainService.Observer {
     }
 
     public void follow(AuthToken authToken, User followee) {
-        getMainService().follow(authToken, followee, this);
+        getFollowService().follow(authToken, followee, this);
     }
 
     public void  unfollow(AuthToken authToken, User followee) {
-        getMainService().unfollow(authToken, followee, this);
+        getFollowService().unfollow(authToken, followee, this);
     }
 
     public void getFollowerCount(AuthToken authToken, User user) {
-        getMainService().getFollowerCount(authToken, user, this);
+        getFollowService().getFollowerCount(authToken, user, this);
     }
 
     public void getFollowingCount (AuthToken authToken, User user) {
-        getMainService().getFollowingCount(authToken, user, this);
+        getFollowService().getFollowingCount(authToken, user, this);
     }
 
     public void logout (AuthToken authToken) {
-        getMainService().logout(authToken, this);
+        getUserService().logout(authToken, this);
     }
 
     public void getFollowStatus (AuthToken authToken, User user, User selected) {
-        getMainService().isFollower(authToken, user, selected, this);
+        getFollowService().isFollower(authToken, user, selected, this);
     }
 
     public void post(AuthToken authToken, Status status) {
-        getMainService().post(authToken, status, this);
+        getStatusService().post(authToken, status, this);
     }
 
     public List<String> parseURLs(String post) throws MalformedURLException {
@@ -166,5 +207,7 @@ public class MainPresenter implements MainService.Observer {
         }
     }
 
-    public MainService getMainService() {return new MainService();}
+    public UserService getUserService() {return new UserService();}
+    public FollowService getFollowService() {return new FollowService();}
+    public StatusService getStatusService() {return new StatusService();}
 }

@@ -4,11 +4,12 @@ import android.util.Log;
 
 import java.util.List;
 
-import edu.byu.cs.tweeter.client.service.FollowerService;
+import edu.byu.cs.tweeter.client.service.FollowService;
+import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FollowerPresenter implements FollowerService.Observer {
+public class FollowerPresenter implements FollowService.Observer, UserService.Observer {
 
     private static final String LOG_TAG = "FollowerPresenter";
     public static final int PAGE_SIZE = 10;
@@ -35,6 +36,53 @@ public class FollowerPresenter implements FollowerService.Observer {
         this.authToken = authToken;
     }
 
+    //====== remove when fixing presenters ======//
+    @Override
+    public void handleFolloweeSuccess(List<User> followers, boolean hasMorePages) {
+
+    }
+
+    @Override
+    public void handleFollowerCountSuccess(int count) {
+
+    }
+
+    @Override
+    public void handleFollowingCountSuccess(int count) {
+
+    }
+
+    @Override
+    public void handleIsFollowerSuccess(boolean isFollower) {
+
+    }
+
+    @Override
+    public void handleLoginSuccess(User user, AuthToken authToken) {
+
+    }
+
+    @Override
+    public void handleLogoutSuccess() {
+
+    }
+
+    @Override
+    public void handleRegisterSuccess(User user, AuthToken authToken) {
+
+    }
+
+    @Override
+    public void handleFollowSuccess() {
+
+    }
+
+    @Override
+    public void handleUnfollowSuccess() {
+
+    }
+    //========================================//
+
     @Override
     public void handleFollowerSuccess(List<User> followers, boolean hasMorePages) {
         if (followers.size() > 0) {
@@ -58,42 +106,18 @@ public class FollowerPresenter implements FollowerService.Observer {
     }
 
     @Override
-    public void handleFollowerFailure(String message) {
-        String eMsg = "Failed to retrieve followers: " + message;
-        Log.e(LOG_TAG, eMsg);
-
+    public void handleFailure(String message) {
+        Log.e(LOG_TAG, message);
         view.setLoading(false);
-        view.displayErrorMessage(eMsg);
+        view.displayErrorMessage(message);
         setLoading(false);
     }
 
     @Override
-    public void handleUserFailure(String message) {
-        String eMsg = "Failed to retrieve user: " + message;
-        Log.e(LOG_TAG, eMsg);
-
+    public void handleException(String message, Exception exception) {
+        Log.e(LOG_TAG, message, exception);
         view.setLoading(false);
-        view.displayErrorMessage(eMsg);
-        setLoading(false);
-    }
-
-    @Override
-    public void handleFollowerException(Exception exception) {
-        String errorMessage = "Failed to retrieve followers because of exception: " + exception.getMessage();
-        Log.e(LOG_TAG, errorMessage, exception);
-
-        view.setLoading(false);
-        view.displayErrorMessage(errorMessage);
-        setLoading(false);
-    }
-
-    @Override
-    public void handleUserException(Exception exception) {
-        String errorMessage = "Failed to retrieve user because of exception: " + exception.getMessage();
-        Log.e(LOG_TAG, errorMessage, exception);
-
-        view.setLoading(false);
-        view.displayErrorMessage(errorMessage);
+        view.displayErrorMessage(message);
         setLoading(false);
     }
 
@@ -145,11 +169,11 @@ public class FollowerPresenter implements FollowerService.Observer {
     }
 
     public void  getSelectedUser(AuthToken authToken, String alias) {
-        getFollowerService().getSelectedUser(authToken, alias, this);
+        getUserService().getSelectedUser(authToken, alias, this);
     }
 
     public void getFollowers(AuthToken authToken, User targetUser, int limit, User lastFollowee) {
-        getFollowerService().getFollowers(authToken, targetUser, limit, lastFollowee, this);
+        getFollowService().getFollowers(authToken, targetUser, limit, lastFollowee, this);
     }
 
     public boolean loadMore(int visible, int first, int total) {
@@ -162,5 +186,6 @@ public class FollowerPresenter implements FollowerService.Observer {
         return false;
     }
 
-    public FollowerService getFollowerService() {return new FollowerService();}
+    public FollowService getFollowService() {return new FollowService();}
+    public UserService getUserService() {return new UserService();}
 }
