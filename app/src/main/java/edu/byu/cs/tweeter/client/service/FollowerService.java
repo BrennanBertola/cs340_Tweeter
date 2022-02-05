@@ -67,7 +67,7 @@ public class FollowerService {
             if(followerTask) {
                 boolean success = bundle.getBoolean(GetFollowersTask.SUCCESS_KEY);
                 if (success) {
-                    List<User> followers = (List<User>) bundle.getSerializable(GetFollowersTask.FOLLOWERS_KEY);
+                    List<User> followers = (List<User>) bundle.getSerializable(GetFollowersTask.ITEMS_KEY);
                     boolean hasMorePages = bundle.getBoolean(GetFollowersTask.MORE_PAGES_KEY);
                     observer.handleFollowerSuccess(followers, hasMorePages);
                 } else if (bundle.containsKey(GetFollowersTask.MESSAGE_KEY)) {

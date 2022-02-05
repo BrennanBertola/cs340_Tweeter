@@ -10,6 +10,7 @@ import java.util.List;
 import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTaskUtils;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFeedTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
+import edu.byu.cs.tweeter.client.backgroundTask.PagedTask;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
@@ -69,13 +70,13 @@ public class FeedService {
             if (feedTask) {
                 boolean success = bundle.getBoolean(GetFeedTask.SUCCESS_KEY);
                 if (success) {
-                    List<Status> statuses = (List<Status>) bundle.getSerializable(GetFeedTask.STATUSES_KEY);
+                    List<Status> statuses = (List<Status>) bundle.getSerializable(GetFeedTask.ITEMS_KEY);
                     boolean hasMorePages = bundle.getBoolean(GetFeedTask.MORE_PAGES_KEY);
                     observer.handleFeedSuccess(statuses, hasMorePages);
                 } else if (bundle.containsKey(GetFeedTask.MESSAGE_KEY)) {
                     String errorMessage = bundle.getString(GetFeedTask.MESSAGE_KEY);
                     observer.handleFeedFailure(errorMessage);
-                } else if (bundle.containsKey(FollowingService.GetFollowingTask.EXCEPTION_KEY)) {
+                } else if (bundle.containsKey(GetFeedTask.EXCEPTION_KEY)) {
                     Exception ex = (Exception) bundle.getSerializable(GetFeedTask.EXCEPTION_KEY);
                     observer.handleFeedException(ex);
                 }

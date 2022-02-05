@@ -1,5 +1,6 @@
 package edu.byu.cs.tweeter.client.backgroundTask;
 
+
 import android.os.Handler;
 
 import java.util.List;
@@ -9,13 +10,13 @@ import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.util.Pair;
 
 /**
- * Background task that retrieves a page of followers.
+ * Background task that retrieves a page of other users being followed by a specified user.
  */
-public class GetFollowersTask extends PagedUserTask {
+public class GetFollowingTask extends PagedUserTask {
 
-    public GetFollowersTask(AuthToken authToken, User targetUser, int limit, User lastFollower,
+    public GetFollowingTask(AuthToken authToken, User targetUser, int limit, User lastFollowee,
                             Handler messageHandler) {
-        super(authToken, targetUser, limit, lastFollower, messageHandler);
+        super(authToken, targetUser, limit, lastFollowee, messageHandler);
     }
 
     @Override

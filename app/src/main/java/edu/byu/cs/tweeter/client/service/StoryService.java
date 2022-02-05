@@ -69,7 +69,7 @@ public class StoryService {
             if (storyTask) {
                 boolean success = bundle.getBoolean(GetStoryTask.SUCCESS_KEY);
                 if (success) {
-                    List<Status> statuses = (List<Status>) bundle.getSerializable(GetStoryTask.STATUSES_KEY);
+                    List<Status> statuses = (List<Status>) bundle.getSerializable(GetStoryTask.ITEMS_KEY);
                     boolean hasMorePages = bundle.getBoolean(GetStoryTask.MORE_PAGES_KEY);
                     observer.handleStorySuccess(statuses, hasMorePages);
                 } else if (bundle.containsKey(GetStoryTask.MESSAGE_KEY)) {
