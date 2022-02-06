@@ -8,36 +8,16 @@ import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class RegisterPresenter implements UserService.UserObserver {
+public class RegisterPresenter extends Presenter<RegisterPresenter.RegisterView, User> {
     private static final String LOG_TAG = "LoginPresenter";
 
-    private final View view;
-
-    public interface View {
+    public interface RegisterView extends View{
         void register(User user);
-        void displayErrorMessage(String message);
     }
 
-    public RegisterPresenter(View view) {
-        this.view = view;
+    public RegisterPresenter(RegisterView view) {
+        super(view);
     }
-
-    //====== remove when fixing presenters ======//
-    @Override
-    public void handleUserSuccess(User user) {
-
-    }
-
-    @Override
-    public void handleLoginSuccess(User user, AuthToken authToken) {
-
-    }
-
-    @Override
-    public void handleLogoutSuccess() {
-
-    }
-    //========================================//
 
     @Override
     public void handleRegisterSuccess(User user, AuthToken authToken) {
@@ -47,15 +27,13 @@ public class RegisterPresenter implements UserService.UserObserver {
     }
 
     @Override
-    public void handleFailure(String message) {
+    public void logError(String message) {
         Log.e(LOG_TAG, message);
-        view.displayErrorMessage(message);
     }
 
     @Override
-    public void handleException(String message, Exception ex) {
+    public void logError(String message, Exception ex) {
         Log.e(LOG_TAG, message, ex);
-        view.displayErrorMessage(message);
     }
 
     public void register(String first, String last, String username, String password, String image) {
@@ -87,6 +65,4 @@ public class RegisterPresenter implements UserService.UserObserver {
             throw new IllegalArgumentException("Profile image must be uploaded.");
         }
     }
-
-    public UserService getUserService() {return new UserService();}
 }

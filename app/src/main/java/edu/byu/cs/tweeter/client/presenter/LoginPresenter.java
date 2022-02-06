@@ -7,36 +7,16 @@ import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class LoginPresenter implements UserService.UserObserver {
+public class LoginPresenter extends Presenter<LoginPresenter.LoginView, User> {
     private static final String LOG_TAG = "LoginPresenter";
 
-    private final View view;
-
-    public interface View {
+    public interface LoginView extends View {
         void login(User user);
-        void displayErrorMessage(String message);
     }
 
-    public LoginPresenter(View view) {
-        this.view = view;
+    public LoginPresenter(LoginView view) {
+        super(view);
     }
-
-    //====== remove when fixing presenters ======//
-    @Override
-    public void handleUserSuccess(User user) {
-        //remove when fixing presenter
-    }
-
-    @Override
-    public void handleLogoutSuccess() {
-
-    }
-
-    @Override
-    public void handleRegisterSuccess(User user, AuthToken authToken) {
-
-    }
-    //========================================//
 
     @Override
     public void handleLoginSuccess(User user, AuthToken authToken) {
@@ -46,15 +26,13 @@ public class LoginPresenter implements UserService.UserObserver {
     }
 
     @Override
-    public void handleFailure(String message) {
+    protected void logError(String message) {
         Log.e(LOG_TAG, message);
-        view.displayErrorMessage(message);
     }
 
     @Override
-    public void handleException(String message, Exception ex) {
-        Log.e(LOG_TAG, message, ex);
-        view.displayErrorMessage(message);
+    protected void logError(String message, Exception exception) {
+        Log.e(LOG_TAG, message, exception);
     }
 
     public void login(String username, String password) {
@@ -72,6 +50,4 @@ public class LoginPresenter implements UserService.UserObserver {
             throw new IllegalArgumentException("Password cannot be empty.");
         }
     }
-
-    public UserService getUserService() {return new UserService();}
 }

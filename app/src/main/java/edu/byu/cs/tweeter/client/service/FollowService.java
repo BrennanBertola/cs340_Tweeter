@@ -103,14 +103,11 @@ public class FollowService {
     }
 
     public static class FollowHandler extends MessageHandler {
-
         private final FollowObserver observer;
-        private final String task;
 
         public FollowHandler(FollowObserver observer, String task) {
-            super();
+            super(task);
             this.observer = observer;
-            this.task = task;
         }
 
         @Override

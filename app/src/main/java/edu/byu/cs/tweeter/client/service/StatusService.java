@@ -60,14 +60,11 @@ public class StatusService {
     }
 
     public static class StatusHandler extends MessageHandler {
-
         private final StatusObserver observer;
-        private final String task;
 
         public StatusHandler(StatusObserver observer, String task) {
-            super();
+            super(task);
             this.observer = observer;
-            this.task = task;
         }
 
         @Override

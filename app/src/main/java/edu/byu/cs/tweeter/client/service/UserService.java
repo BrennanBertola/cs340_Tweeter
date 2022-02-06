@@ -61,14 +61,11 @@ public class UserService {
     }
 
     public static class UserHandler extends MessageHandler {
-
         private final UserObserver observer;
-        private final String task;
 
         public UserHandler(UserObserver observer, String task) {
-            super();
+            super(task);
             this.observer = observer;
-            this.task = task;
         }
 
         @Override

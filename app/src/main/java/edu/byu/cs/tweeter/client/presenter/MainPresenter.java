@@ -15,16 +15,10 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class MainPresenter implements UserService.UserObserver, FollowService.FollowObserver<User>,
-        StatusService.StatusObserver<User> {
+public class MainPresenter extends Presenter<MainPresenter.MainView, User> {
     private static final String LOG_TAG = "MainPresenter";
 
-    private final View view;
-
-
-
-
-    public interface View {
+    public interface MainView extends View{
         void follow();
         void unfollow();
         void updateFollowButton();
@@ -33,27 +27,9 @@ public class MainPresenter implements UserService.UserObserver, FollowService.Fo
         void updateFollowerCount(int count);
         void updateFollowingCount(int count);
         void isFollower(boolean isFollower);
-        void displayErrorMessage(String message);
     }
 
-    public MainPresenter(View view) {this.view = view;}
-
-    //====== remove when fixing presenters ======//
-    @Override
-    public void handlePagedSuccess(Pair<List<User>, Boolean> pair) {
-
-    }
-
-    @Override
-    public void handleUserSuccess(User user) {
-
-    }
-
-    @Override
-    public void handleLoginSuccess(User user, AuthToken authToken) {
-
-    }
-    //========================================//
+    public MainPresenter(MainView view) {super(view);}
 
     @Override
     public void handleFollowSuccess() {
@@ -101,15 +77,13 @@ public class MainPresenter implements UserService.UserObserver, FollowService.Fo
     }
 
     @Override
-    public void handleFailure (String message) {
+    public void logError (String message) {
         Log.e(LOG_TAG, message);
-        view.displayErrorMessage(message);
     }
 
     @Override
-    public void handleException (String message, Exception ex) {
+    public void logError (String message, Exception ex) {
         Log.e(LOG_TAG, message, ex);
-        view.displayErrorMessage(message);
     }
 
     public void follow(AuthToken authToken, User followee) {
@@ -197,7 +171,4 @@ public class MainPresenter implements UserService.UserObserver, FollowService.Fo
         }
     }
 
-    public UserService getUserService() {return new UserService();}
-    public FollowService getFollowService() {return new FollowService();}
-    public StatusService getStatusService() {return new StatusService();}
 }
