@@ -10,7 +10,7 @@ import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FollowerPresenter implements FollowService.Observer, UserService.Observer {
+public class FollowerPresenter implements FollowService.FollowObserver<User>, UserService.UserObserver {
 
     private static final String LOG_TAG = "FollowerPresenter";
     public static final int PAGE_SIZE = 10;
@@ -38,11 +38,6 @@ public class FollowerPresenter implements FollowService.Observer, UserService.Ob
     }
 
     //====== remove when fixing presenters ======//
-    @Override
-    public void handleFolloweeSuccess(Pair<List<User>, Boolean> pair) {
-
-    }
-
     @Override
     public void handleFollowerCountSuccess(int count) {
 
@@ -85,7 +80,7 @@ public class FollowerPresenter implements FollowService.Observer, UserService.Ob
     //========================================//
 
     @Override
-    public void handleFollowerSuccess(Pair<List<User>, Boolean> pair) {
+    public void handlePagedSuccess(Pair<List<User>, Boolean> pair) {
         List<User> followers = pair.first;
         if (followers.size() > 0) {
             setLastFollower(followers.get(followers.size() - 1));

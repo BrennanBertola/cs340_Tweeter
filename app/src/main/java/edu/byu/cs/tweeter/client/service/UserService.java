@@ -16,58 +16,56 @@ import edu.byu.cs.tweeter.model.domain.User;
 
 public class UserService {
 
-    public interface Observer {
+    public interface UserObserver extends Observer {
         void handleUserSuccess(User user);
         void handleLoginSuccess(User user, AuthToken authToken);
         void handleLogoutSuccess();
         void handleRegisterSuccess(User user, AuthToken authToken);
-        void handleFailure(String message);
-        void handleException(String message, Exception exception);
     }
 
     public UserService() {
     }
 
-    public void getSelectedUser(AuthToken authToken, String alias, Observer observer) {
+    public void getSelectedUser(AuthToken authToken, String alias, UserObserver observer) {
         GetUserTask userTask = getGetUserTask(authToken, alias, observer);
         BackgroundTaskUtils.runTask(userTask);
     }
-    public GetUserTask getGetUserTask(AuthToken authToken, String alias, Observer observer) {
+    public GetUserTask getGetUserTask(AuthToken authToken, String alias, UserObserver observer) {
         return new GetUserTask(authToken, alias, new UserHandler(observer, "getUser"));
     }
 
-    public void login(String username, String password, Observer observer) {
+    public void login(String username, String password, UserObserver observer) {
         LoginTask loginTask = getLoginTask(username, password, observer);
         BackgroundTaskUtils.runTask(loginTask);
     }
-    public LoginTask getLoginTask(String username, String password, Observer observer) {
+    public LoginTask getLoginTask(String username, String password, UserObserver observer) {
         return new LoginTask(username, password, new UserHandler(observer, "login"));
     }
 
-    public void logout(AuthToken authToken, Observer observer) {
+    public void logout(AuthToken authToken, UserObserver observer) {
         LogoutTask task = getLogoutTask(authToken, observer);
         BackgroundTaskUtils.runTask(task);
     }
-    public LogoutTask getLogoutTask(AuthToken authToken, Observer observer) {
+    public LogoutTask getLogoutTask(AuthToken authToken, UserObserver observer) {
         return new LogoutTask(authToken, new UserHandler(observer, "logout"));
     }
 
     public void register(String first, String last, String username, String password,
-                         String image, Observer observer) {
+                         String image, UserObserver observer) {
         RegisterTask registerTask = getRegisterTask(first, last, username, password, image, observer);
         BackgroundTaskUtils.runTask(registerTask);
     }
     public RegisterTask getRegisterTask(String first, String last, String username, String password,
-                                        String image, Observer observer) {
+                                        String image, UserObserver observer) {
         return new RegisterTask(first, last, username, password, image, new UserHandler(observer, "register"));
     }
 
     public static class UserHandler extends MessageHandler {
 
-        private final Observer observer;
+        private final UserObserver observer;
         private final String task;
 
-        public UserHandler(Observer observer, String task) {
+        public UserHandler(UserObserver observer, String task) {
             super();
             this.observer = observer;
             this.task = task;

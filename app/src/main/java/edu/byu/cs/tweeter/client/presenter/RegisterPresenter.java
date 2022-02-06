@@ -8,7 +8,7 @@ import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class RegisterPresenter implements UserService.Observer {
+public class RegisterPresenter implements UserService.UserObserver {
     private static final String LOG_TAG = "LoginPresenter";
 
     private final View view;

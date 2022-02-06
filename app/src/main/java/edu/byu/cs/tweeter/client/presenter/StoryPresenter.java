@@ -11,7 +11,7 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class StoryPresenter implements StatusService.Observer, UserService.Observer {
+public class StoryPresenter implements StatusService.StatusObserver<Status>, UserService.UserObserver {
 
     private static final String LOG_TAG = "StoryPresenter";
     public static final int PAGE_SIZE = 10;
@@ -39,11 +39,6 @@ public class StoryPresenter implements StatusService.Observer, UserService.Obser
 
     //====== remove when fixing presenters ======//
     @Override
-    public void handleFeedSuccess(Pair<List<Status>, Boolean> pair) {
-
-    }
-
-    @Override
     public void handleLoginSuccess(User user, AuthToken authToken) {
 
     }
@@ -65,7 +60,7 @@ public class StoryPresenter implements StatusService.Observer, UserService.Obser
     //========================================//
 
     @Override
-    public void handleStorySuccess(Pair<List<Status>, Boolean> pair) {
+    public void handlePagedSuccess(Pair<List<Status>, Boolean> pair) {
         List<Status> statuses = pair.first;
         if (statuses.size() > 0) {
             setLastStatus(statuses.get(statuses.size() - 1));

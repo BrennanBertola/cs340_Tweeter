@@ -22,97 +22,92 @@ import edu.byu.cs.tweeter.model.domain.User;
 
 public class FollowService {
 
-    public interface Observer {
+    public interface FollowObserver<T> extends PagedObserver<T> {
         void handleFollowSuccess();
         void handleUnfollowSuccess();
-        void handleFollowerSuccess(Pair<List<User>, Boolean> pair);
-        void handleFolloweeSuccess(Pair<List<User>, Boolean> pair);
         void handleFollowerCountSuccess(int count);
         void handleFollowingCountSuccess(int count);
         void handleIsFollowerSuccess(boolean isFollower);
-        void handleFailure(String message);
-        void handleException(String message, Exception exception);
     }
 
-    public FollowService() {
-    }
+    public FollowService() {}
 
     public void getFollowers(AuthToken authToken, User targetUser, int limit, User lastFollower,
-                             Observer observer) {
+                             FollowObserver observer) {
         GetFollowersTask followerTask = getGetFollowersTask(authToken, targetUser, limit,
                 lastFollower, observer);
         BackgroundTaskUtils.runTask(followerTask);
     }
     public GetFollowersTask getGetFollowersTask(AuthToken authToken, User targetUser, int limit,
-                                                User lastFollowee, Observer observer) {
+                                                User lastFollowee, FollowObserver observer) {
         return new GetFollowersTask(authToken, targetUser, limit, lastFollowee,
                 new FollowHandler(observer, "getFollowers"));
     }
 
     public void getFollowees(AuthToken authToken, User targetUser, int limit, User lastFollowee,
-                             Observer observer) {
+                             FollowObserver observer) {
         GetFollowingTask followingTask = getGetFollowingTask(authToken, targetUser, limit,
                 lastFollowee, observer);
         BackgroundTaskUtils.runTask(followingTask);
     }
     public GetFollowingTask getGetFollowingTask(AuthToken authToken, User targetUser, int limit,
-                                                User lastFollowee, Observer observer) {
+                                                User lastFollowee, FollowObserver observer) {
         return new GetFollowingTask(authToken, targetUser, limit, lastFollowee,
                 new FollowHandler(observer, "getFollowing"));
     }
 
-    public void follow(AuthToken authToken, User followee, Observer observer) {
+    public void follow(AuthToken authToken, User followee, FollowObserver observer) {
         FollowTask task = getFollowTask(authToken, followee, observer);
         BackgroundTaskUtils.runTask(task);
     }
-    public FollowTask getFollowTask(AuthToken authToken, User followee, Observer observer) {
+    public FollowTask getFollowTask(AuthToken authToken, User followee, FollowObserver observer) {
         return new FollowTask(authToken, followee, new FollowHandler(observer, "follow"));
     }
 
-    public void unfollow(AuthToken authToken, User followee, Observer observer) {
+    public void unfollow(AuthToken authToken, User followee, FollowObserver observer) {
         UnfollowTask task = getUnfollowTask(authToken, followee, observer);
         BackgroundTaskUtils.runTask(task);
     }
-    public UnfollowTask getUnfollowTask (AuthToken authToken, User followee, Observer observer) {
+    public UnfollowTask getUnfollowTask (AuthToken authToken, User followee, FollowObserver observer) {
         return new UnfollowTask(authToken, followee, new FollowHandler(observer, "unfollow"));
     }
 
-    public void getFollowerCount(AuthToken authToken, User user, Observer observer) {
+    public void getFollowerCount(AuthToken authToken, User user, FollowObserver observer) {
         GetFollowersCountTask task = getGetFollowersCountTask(authToken, user, observer);
         BackgroundTaskUtils.runTask(task);
     }
     public GetFollowersCountTask getGetFollowersCountTask (AuthToken authToken, User user,
-                                                           Observer observer) {
+                                                           FollowObserver observer) {
         return new GetFollowersCountTask(authToken, user, new FollowHandler(observer,
                 "followerCount"));
     }
 
-    public void getFollowingCount(AuthToken authToken, User user, Observer observer) {
+    public void getFollowingCount(AuthToken authToken, User user, FollowObserver observer) {
         GetFollowingCountTask task = getGetFollowingCountTask(authToken, user, observer);
         BackgroundTaskUtils.runTask(task);
     }
     public GetFollowingCountTask getGetFollowingCountTask (AuthToken authToken, User user,
-                                                           Observer observer) {
+                                                           FollowObserver observer) {
         return new GetFollowingCountTask(authToken, user, new FollowHandler(observer,
                 "followingCount"));
     }
 
-    public void isFollower(AuthToken authToken, User user, User selected, Observer observer) {
+    public void isFollower(AuthToken authToken, User user, User selected, FollowObserver observer) {
         IsFollowerTask task = getIsFollowerTask(authToken, user, selected, observer);
         BackgroundTaskUtils.runTask(task);
     }
     public IsFollowerTask getIsFollowerTask(AuthToken authToken, User user, User selected,
-                                            Observer observer) {
+                                            FollowObserver observer) {
         return new IsFollowerTask(authToken, user, selected, new FollowHandler(observer,
                 "isFollower"));
     }
 
     public static class FollowHandler extends MessageHandler {
 
-        private final Observer observer;
+        private final FollowObserver observer;
         private final String task;
 
-        public FollowHandler(Observer observer, String task) {
+        public FollowHandler(FollowObserver observer, String task) {
             super();
             this.observer = observer;
             this.task = task;
@@ -122,12 +117,7 @@ public class FollowService {
         protected void success (Bundle bundle) {
             if (task.equals("getFollowers") || task.equals("getFollowing")) {
                 PagedTaskHandler<User> handler = new PagedTaskHandler<>(bundle);
-                if (task.equals("getFollowers")) {
-                    observer.handleFollowerSuccess(handler.handle());
-                }
-                else {
-                    observer.handleFolloweeSuccess(handler.handle());
-                }
+                observer.handlePagedSuccess(handler.handle());
             }
             else if (task.equals("follow")) {
                 observer.handleFollowSuccess();

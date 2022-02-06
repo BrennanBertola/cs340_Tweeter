@@ -15,10 +15,14 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class MainPresenter implements UserService.Observer, FollowService.Observer, StatusService.Observer {
+public class MainPresenter implements UserService.UserObserver, FollowService.FollowObserver<User>,
+        StatusService.StatusObserver<User> {
     private static final String LOG_TAG = "MainPresenter";
 
     private final View view;
+
+
+
 
     public interface View {
         void follow();
@@ -36,27 +40,12 @@ public class MainPresenter implements UserService.Observer, FollowService.Observ
 
     //====== remove when fixing presenters ======//
     @Override
-    public void handleFollowerSuccess(Pair<List<User>, Boolean> pair) {
-
-    }
-
-    @Override
-    public void handleFolloweeSuccess(Pair<List<User>, Boolean> pair) {
-
-    }
-
-    @Override
-    public void handleFeedSuccess(Pair<List<Status>, Boolean> pair) {
+    public void handlePagedSuccess(Pair<List<User>, Boolean> pair) {
 
     }
 
     @Override
     public void handleUserSuccess(User user) {
-
-    }
-
-    @Override
-    public void handleStorySuccess(Pair<List<Status>, Boolean> pair) {
 
     }
 

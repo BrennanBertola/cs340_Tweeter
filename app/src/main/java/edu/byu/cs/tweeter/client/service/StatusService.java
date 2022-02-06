@@ -19,56 +19,52 @@ import edu.byu.cs.tweeter.model.domain.User;
 
 public class StatusService {
 
-    public interface Observer {
-        void handleFeedSuccess(Pair<List<Status>, Boolean> pair);
+    public interface StatusObserver<T> extends PagedObserver<T> {
         void handlePostSuccess();
-        void handleStorySuccess(Pair<List<Status>, Boolean> pair);
-        void handleFailure(String message);
-        void handleException(String message, Exception exception);
     }
 
     public StatusService() {
     }
 
     public void getFeed(AuthToken authToken, User targetUser, int limit, Status lastStatus,
-                        Observer observer) {
+                        StatusObserver observer) {
         GetFeedTask feedTask = getGetFeedTask(authToken, targetUser, limit,
                 lastStatus, observer);
         BackgroundTaskUtils.runTask(feedTask);
     }
 
     public GetFeedTask getGetFeedTask(AuthToken authToken, User targetUser, int limit,
-                                      Status lastStatus, Observer observer) {
+                                      Status lastStatus, StatusObserver observer) {
         return new GetFeedTask(authToken, targetUser, limit, lastStatus,
                 new StatusHandler(observer, "getFeed"));
     }
 
-    public void post (AuthToken authToken, Status status, Observer observer) {
+    public void post (AuthToken authToken, Status status, StatusObserver observer) {
         PostStatusTask task = getPostStatusTask(authToken, status, observer);
         BackgroundTaskUtils.runTask(task);
     }
-    public PostStatusTask getPostStatusTask(AuthToken authToken, Status status, Observer observer) {
+    public PostStatusTask getPostStatusTask(AuthToken authToken, Status status, StatusObserver observer) {
         return new PostStatusTask(authToken, status, new StatusHandler(observer, "post"));
     }
 
     public void getStory(AuthToken authToken, User targetUser, int limit, Status lastStatus,
-                         Observer observer) {
+                         StatusObserver observer) {
         GetStoryTask storyTask = getGetStoryTask(authToken, targetUser, limit,
                 lastStatus, observer);
         BackgroundTaskUtils.runTask(storyTask);
     }
     public GetStoryTask getGetStoryTask(AuthToken authToken, User targetUser, int limit,
-                                        Status lastStatus, Observer observer) {
+                                        Status lastStatus, StatusObserver observer) {
         return new GetStoryTask(authToken, targetUser, limit, lastStatus,
                 new StatusHandler(observer, "getStory"));
     }
 
     public static class StatusHandler extends MessageHandler {
 
-        private final Observer observer;
+        private final StatusObserver observer;
         private final String task;
 
-        public StatusHandler(Observer observer, String task) {
+        public StatusHandler(StatusObserver observer, String task) {
             super();
             this.observer = observer;
             this.task = task;
@@ -81,12 +77,7 @@ public class StatusService {
             }
             else if (task.equals("getFeed") || task.equals("getStory")) {
                 PagedTaskHandler<Status> handler = new PagedTaskHandler<>(bundle);
-                if(task.equals("getFeed")) {
-                    observer.handleFeedSuccess(handler.handle());
-                }
-                else {
-                    observer.handleStorySuccess(handler.handle());
-                }
+                observer.handlePagedSuccess(handler.handle());
             }
         }
 
