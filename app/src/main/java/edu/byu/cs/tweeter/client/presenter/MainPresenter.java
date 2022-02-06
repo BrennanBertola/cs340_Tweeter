@@ -1,6 +1,7 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 import android.util.Log;
+import android.util.Pair;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -35,17 +36,17 @@ public class MainPresenter implements UserService.Observer, FollowService.Observ
 
     //====== remove when fixing presenters ======//
     @Override
-    public void handleFollowerSuccess(List<User> followers, boolean hasMorePages) {
+    public void handleFollowerSuccess(Pair<List<User>, Boolean> pair) {
 
     }
 
     @Override
-    public void handleFolloweeSuccess(List<User> followees, boolean hasMorePages) {
+    public void handleFolloweeSuccess(Pair<List<User>, Boolean> pair) {
 
     }
 
     @Override
-    public void handleFeedSuccess(List<Status> statuses, boolean hasMorePages) {
+    public void handleFeedSuccess(Pair<List<Status>, Boolean> pair) {
 
     }
 
@@ -55,7 +56,7 @@ public class MainPresenter implements UserService.Observer, FollowService.Observ
     }
 
     @Override
-    public void handleStorySuccess(List<Status> statuses, boolean hasMorePages) {
+    public void handleStorySuccess(Pair<List<Status>, Boolean> pair) {
 
     }
 

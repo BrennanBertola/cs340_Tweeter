@@ -1,6 +1,7 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 import android.util.Log;
+import android.util.Pair;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class FollowingPresenter implements FollowService.Observer, UserService.O
 
     //====== remove when fixing presenters ======//
     @Override
-    public void handleFollowerSuccess(List<User> followees, boolean hasMorePages) {
+    public void handleFollowerSuccess(Pair<List<User>, Boolean> pair) {
 
     }
 
@@ -83,7 +84,8 @@ public class FollowingPresenter implements FollowService.Observer, UserService.O
     //========================================//
 
     @Override
-    public void handleFolloweeSuccess(List<User> followees, boolean hasMorePages) {
+    public void handleFolloweeSuccess(Pair<List<User>, Boolean> pair) {
+        List<User> followees = pair.first;
         if (followees.size() > 0) {
             setLastFollowee(followees.get(followees.size() - 1));
         }
@@ -91,7 +93,7 @@ public class FollowingPresenter implements FollowService.Observer, UserService.O
             setLastFollowee(null);
         }
 
-        setHasMorePages(hasMorePages);
+        setHasMorePages(pair.second);
         view.setLoading(false);
         view.addItems(followees);
         setLoading(false);

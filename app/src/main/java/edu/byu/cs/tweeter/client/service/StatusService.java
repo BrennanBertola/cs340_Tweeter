@@ -4,9 +4,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Pair;
 
 import java.util.List;
 
+import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTask;
 import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTaskUtils;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFeedTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
@@ -18,9 +20,9 @@ import edu.byu.cs.tweeter.model.domain.User;
 public class StatusService {
 
     public interface Observer {
-        void handleFeedSuccess(List<Status> statuses, boolean hasMorePages);
+        void handleFeedSuccess(Pair<List<Status>, Boolean> pair);
         void handlePostSuccess();
-        void handleStorySuccess(List<Status> statuses, boolean hasMorePages);
+        void handleStorySuccess(Pair<List<Status>, Boolean> pair);
         void handleFailure(String message);
         void handleException(String message, Exception exception);
     }
@@ -38,7 +40,7 @@ public class StatusService {
     public GetFeedTask getGetFeedTask(AuthToken authToken, User targetUser, int limit,
                                       Status lastStatus, Observer observer) {
         return new GetFeedTask(authToken, targetUser, limit, lastStatus,
-                new MessageHandler(observer, "getFeed"));
+                new StatusHandler(observer, "getFeed"));
     }
 
     public void post (AuthToken authToken, Status status, Observer observer) {
@@ -46,7 +48,7 @@ public class StatusService {
         BackgroundTaskUtils.runTask(task);
     }
     public PostStatusTask getPostStatusTask(AuthToken authToken, Status status, Observer observer) {
-        return new PostStatusTask(authToken, status, new MessageHandler(observer, "post"));
+        return new PostStatusTask(authToken, status, new StatusHandler(observer, "post"));
     }
 
     public void getStory(AuthToken authToken, User targetUser, int limit, Status lastStatus,
@@ -58,70 +60,44 @@ public class StatusService {
     public GetStoryTask getGetStoryTask(AuthToken authToken, User targetUser, int limit,
                                         Status lastStatus, Observer observer) {
         return new GetStoryTask(authToken, targetUser, limit, lastStatus,
-                new MessageHandler(observer, "getStory"));
+                new StatusHandler(observer, "getStory"));
     }
 
-    public static class MessageHandler extends Handler {
+    public static class StatusHandler extends MessageHandler {
 
         private final Observer observer;
         private final String task;
 
-        public MessageHandler(Observer observer, String task) {
-            super(Looper.getMainLooper());
+        public StatusHandler(Observer observer, String task) {
+            super();
             this.observer = observer;
             this.task = task;
         }
 
         @Override
-        public void handleMessage(Message message) {
-            Bundle bundle = message.getData();
-            if (task.equals("getFeed")) {
-                boolean success = bundle.getBoolean(GetFeedTask.SUCCESS_KEY);
-                if (success) {
-                    List<Status> statuses = (List<Status>) bundle.getSerializable(GetFeedTask.ITEMS_KEY);
-                    boolean hasMorePages = bundle.getBoolean(GetFeedTask.MORE_PAGES_KEY);
-                    observer.handleFeedSuccess(statuses, hasMorePages);
-                } else if (bundle.containsKey(GetFeedTask.MESSAGE_KEY)) {
-                    String msg = bundle.getString(GetFeedTask.MESSAGE_KEY);
-                    msg = "Failed to fetch feed: " + msg;
-                    observer.handleFailure(msg);
-                } else if (bundle.containsKey(GetFeedTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) bundle.getSerializable(GetFeedTask.EXCEPTION_KEY);
-                    String msg = "Exception fetching feed: " + ex.getMessage().toString();
-                    observer.handleException(msg, ex);
+        protected void success(Bundle bundle) {
+            if (task.equals("post")) {
+                observer.handlePostSuccess();
+            }
+            else if (task.equals("getFeed") || task.equals("getStory")) {
+                PagedTaskHandler<Status> handler = new PagedTaskHandler<>(bundle);
+                if(task.equals("getFeed")) {
+                    observer.handleFeedSuccess(handler.handle());
+                }
+                else {
+                    observer.handleStorySuccess(handler.handle());
                 }
             }
-            else if (task.equals("post")) {
-                boolean success = bundle.getBoolean(PostStatusTask.SUCCESS_KEY);
-                if (success) {
-                    observer.handlePostSuccess();
-                }
-                else if (message.getData().containsKey(PostStatusTask.MESSAGE_KEY)) {
-                    String eMsg = message.getData().getString(PostStatusTask.MESSAGE_KEY);
-                    observer.handleFailure("Failed to get post status: " + eMsg);
-                }
-                else if (message.getData().containsKey(PostStatusTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) message.getData().getSerializable(PostStatusTask.EXCEPTION_KEY);
-                    String eMsg = "Failed to post status because of exception: " + ex.getMessage();
-                    observer.handleException(eMsg, ex);
-                }
-            }
-            else if (task.equals("getStory")) {
-                boolean success = bundle.getBoolean(GetStoryTask.SUCCESS_KEY);
-                if (success) {
-                    List<Status> statuses = (List<Status>) bundle.getSerializable(GetStoryTask.ITEMS_KEY);
-                    boolean hasMorePages = bundle.getBoolean(GetStoryTask.MORE_PAGES_KEY);
-                    observer.handleStorySuccess(statuses, hasMorePages);
-                } else if (bundle.containsKey(GetStoryTask.MESSAGE_KEY)) {
-                    String eMsg = bundle.getString(GetStoryTask.MESSAGE_KEY);
-                    eMsg = "Failed to get story: " + eMsg;
-                    observer.handleFailure(eMsg);
-                } else if (bundle.containsKey(GetStoryTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) bundle.getSerializable(GetStoryTask.EXCEPTION_KEY);
-                    String msg = "Failed to get story due to exception: " + ex.getMessage().toString();
-                    observer.handleException(msg, ex);
-                }
-            }
+        }
+
+        @Override
+        protected void fail (String message) {
+            observer.handleFailure("Status Request failed: " + message);
+        }
+
+        @Override
+        protected void exception (String message, Exception ex) {
+            observer.handleException("Exception during status request: " + message, ex);
         }
     }
 }

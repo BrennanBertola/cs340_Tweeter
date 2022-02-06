@@ -2,6 +2,7 @@ package edu.byu.cs.tweeter.client.presenter;
 
 
 import android.util.Log;
+import android.util.Pair;
 
 import java.util.List;
 
@@ -49,7 +50,7 @@ public class FeedPresenter implements StatusService.Observer, UserService.Observ
     }
 
     @Override
-    public void handleStorySuccess(List<Status> statuses, boolean hasMorePages) {
+    public void handleStorySuccess(Pair<List<Status>, Boolean> pair) {
 
     }
 
@@ -65,7 +66,8 @@ public class FeedPresenter implements StatusService.Observer, UserService.Observ
     //========================================//
 
     @Override
-    public void handleFeedSuccess(List<Status> statuses, boolean hasMorePages) {
+    public void handleFeedSuccess(Pair<List<Status>, Boolean> pair) {
+        List<Status> statuses = pair.first;
         if (statuses.size() > 0) {
             setLastStatus(statuses.get(statuses.size() - 1));
         }
@@ -73,7 +75,7 @@ public class FeedPresenter implements StatusService.Observer, UserService.Observ
             setLastStatus(null);
         }
 
-        setHasMorePages(hasMorePages);
+        setHasMorePages(pair.second);
         view.setLoading(false);
         view.addItems(statuses);
         setLoading(false);

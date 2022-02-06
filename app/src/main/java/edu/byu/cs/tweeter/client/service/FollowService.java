@@ -4,11 +4,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Pair;
 
 import java.util.List;
 
 import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTaskUtils;
 import edu.byu.cs.tweeter.client.backgroundTask.FollowTask;
+import edu.byu.cs.tweeter.client.backgroundTask.GetCountTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFollowersCountTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFollowersTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFollowingCountTask;
@@ -23,8 +25,8 @@ public class FollowService {
     public interface Observer {
         void handleFollowSuccess();
         void handleUnfollowSuccess();
-        void handleFollowerSuccess(List<User> followers, boolean hasMorePages);
-        void handleFolloweeSuccess(List<User> followees, boolean hasMorePages);
+        void handleFollowerSuccess(Pair<List<User>, Boolean> pair);
+        void handleFolloweeSuccess(Pair<List<User>, Boolean> pair);
         void handleFollowerCountSuccess(int count);
         void handleFollowingCountSuccess(int count);
         void handleIsFollowerSuccess(boolean isFollower);
@@ -44,7 +46,7 @@ public class FollowService {
     public GetFollowersTask getGetFollowersTask(AuthToken authToken, User targetUser, int limit,
                                                 User lastFollowee, Observer observer) {
         return new GetFollowersTask(authToken, targetUser, limit, lastFollowee,
-                new MessageHandler(observer, "getFollowers"));
+                new FollowHandler(observer, "getFollowers"));
     }
 
     public void getFollowees(AuthToken authToken, User targetUser, int limit, User lastFollowee,
@@ -56,7 +58,7 @@ public class FollowService {
     public GetFollowingTask getGetFollowingTask(AuthToken authToken, User targetUser, int limit,
                                                 User lastFollowee, Observer observer) {
         return new GetFollowingTask(authToken, targetUser, limit, lastFollowee,
-                new MessageHandler(observer, "getFollowing"));
+                new FollowHandler(observer, "getFollowing"));
     }
 
     public void follow(AuthToken authToken, User followee, Observer observer) {
@@ -64,7 +66,7 @@ public class FollowService {
         BackgroundTaskUtils.runTask(task);
     }
     public FollowTask getFollowTask(AuthToken authToken, User followee, Observer observer) {
-        return new FollowTask(authToken, followee, new MessageHandler(observer, "follow"));
+        return new FollowTask(authToken, followee, new FollowHandler(observer, "follow"));
     }
 
     public void unfollow(AuthToken authToken, User followee, Observer observer) {
@@ -72,7 +74,7 @@ public class FollowService {
         BackgroundTaskUtils.runTask(task);
     }
     public UnfollowTask getUnfollowTask (AuthToken authToken, User followee, Observer observer) {
-        return new UnfollowTask(authToken, followee, new MessageHandler(observer, "unfollow"));
+        return new UnfollowTask(authToken, followee, new FollowHandler(observer, "unfollow"));
     }
 
     public void getFollowerCount(AuthToken authToken, User user, Observer observer) {
@@ -81,7 +83,7 @@ public class FollowService {
     }
     public GetFollowersCountTask getGetFollowersCountTask (AuthToken authToken, User user,
                                                            Observer observer) {
-        return new GetFollowersCountTask(authToken, user, new MessageHandler(observer,
+        return new GetFollowersCountTask(authToken, user, new FollowHandler(observer,
                 "followerCount"));
     }
 
@@ -91,7 +93,7 @@ public class FollowService {
     }
     public GetFollowingCountTask getGetFollowingCountTask (AuthToken authToken, User user,
                                                            Observer observer) {
-        return new GetFollowingCountTask(authToken, user, new MessageHandler(observer,
+        return new GetFollowingCountTask(authToken, user, new FollowHandler(observer,
                 "followingCount"));
     }
 
@@ -101,134 +103,61 @@ public class FollowService {
     }
     public IsFollowerTask getIsFollowerTask(AuthToken authToken, User user, User selected,
                                             Observer observer) {
-        return new IsFollowerTask(authToken, user, selected, new MessageHandler(observer,
+        return new IsFollowerTask(authToken, user, selected, new FollowHandler(observer,
                 "isFollower"));
     }
 
-    public static class MessageHandler extends Handler {
+    public static class FollowHandler extends MessageHandler {
 
         private final Observer observer;
         private final String task;
 
-        public MessageHandler(Observer observer, String task) {
-            super(Looper.getMainLooper());
+        public FollowHandler(Observer observer, String task) {
+            super();
             this.observer = observer;
             this.task = task;
         }
 
         @Override
-        public void handleMessage(Message message) {
-            Bundle bundle = message.getData();
-            if (task.equals("getFollowers")) {
-                boolean success = bundle.getBoolean(GetFollowersTask.SUCCESS_KEY);
-                if (success) {
-                    List<User> followers = (List<User>) bundle.getSerializable(GetFollowersTask.ITEMS_KEY);
-                    boolean hasMorePages = bundle.getBoolean(GetFollowersTask.MORE_PAGES_KEY);
-                    observer.handleFollowerSuccess(followers, hasMorePages);
-                } else if (bundle.containsKey(GetFollowersTask.MESSAGE_KEY)) {
-                    String msg = bundle.getString(GetFollowersTask.MESSAGE_KEY);
-                    msg = "Failed to fetch followers: " + msg;
-                    observer.handleFailure(msg);
-                } else if (bundle.containsKey(GetFollowersTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) bundle.getSerializable(GetFollowersTask.EXCEPTION_KEY);
-                    String msg = "Exception when fetching followers: " + ex.getMessage().toString();
-                    observer.handleException(msg, ex);
+        protected void success (Bundle bundle) {
+            if (task.equals("getFollowers") || task.equals("getFollowing")) {
+                PagedTaskHandler<User> handler = new PagedTaskHandler<>(bundle);
+                if (task.equals("getFollowers")) {
+                    observer.handleFollowerSuccess(handler.handle());
                 }
-            }
-            else if (task.equals("getFollowing")) {
-                boolean success = bundle.getBoolean(GetFollowingTask.SUCCESS_KEY);
-                if (success) {
-                    List<User> followers = (List<User>) bundle.getSerializable(GetFollowingTask.ITEMS_KEY);
-                    boolean hasMorePages = bundle.getBoolean(GetFollowingTask.MORE_PAGES_KEY);
-                    observer.handleFolloweeSuccess(followers, hasMorePages);
-                } else if (bundle.containsKey(GetFollowingTask.MESSAGE_KEY)) {
-                    String msg = bundle.getString(GetFollowingTask.MESSAGE_KEY);
-                    msg = "Failed to fetch followees: " + msg;
-                    observer.handleFailure(msg);
-                } else if (bundle.containsKey(GetFollowingTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) bundle.getSerializable(GetFollowingTask.EXCEPTION_KEY);
-                    String msg = "Exception when fetching followees: " + ex.getMessage().toString();
-                    observer.handleException(msg, ex);
+                else {
+                    observer.handleFolloweeSuccess(handler.handle());
                 }
             }
             else if (task.equals("follow")) {
-                boolean success = bundle.getBoolean(FollowTask.SUCCESS_KEY);
-                if (success) {
-                    observer.handleFollowSuccess();
-                }
-                else if (message.getData().containsKey(FollowTask.MESSAGE_KEY)) {
-                    String eMsg = message.getData().getString(FollowTask.MESSAGE_KEY);
-                    observer.handleFailure("Failed to follow: " + eMsg);
-                }
-                else if (message.getData().containsKey(FollowTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) message.getData().getSerializable(FollowTask.EXCEPTION_KEY);
-                    String eMsg = "Failed to follow because of exception: " + ex.getMessage();
-                    observer.handleException(eMsg, ex);
-                }
+                observer.handleFollowSuccess();
             }
             else if (task.equals("unfollow")) {
-                boolean success = bundle.getBoolean(UnfollowTask.SUCCESS_KEY);
-                if (success) {
-                    observer.handleUnfollowSuccess();
-                }
-                else if (message.getData().containsKey(UnfollowTask.MESSAGE_KEY)) {
-                    String eMsg = message.getData().getString(UnfollowTask.MESSAGE_KEY);
-                    observer.handleFailure("Failed to unfollow: " + eMsg);
-                }
-                else if (message.getData().containsKey(UnfollowTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) message.getData().getSerializable(UnfollowTask.EXCEPTION_KEY);
-                    String eMsg = "Failed to unfollow because of exception: " + ex.getMessage();
-                    observer.handleException(eMsg, ex);
-                }
+                observer.handleUnfollowSuccess();
             }
-            else if (task.equals("followerCount")) {
-                boolean success = bundle.getBoolean(GetFollowersCountTask.SUCCESS_KEY);
-                if (success) {
-                    int count = message.getData().getInt(GetFollowersCountTask.COUNT_KEY);
-                    observer.handleFollowerCountSuccess(count);
-                }
-                else if (message.getData().containsKey(GetFollowersCountTask.MESSAGE_KEY)) {
-                    String eMsg = message.getData().getString(GetFollowersCountTask.MESSAGE_KEY);
-                    observer.handleFailure("Failed to get follower count: " + eMsg);
-                }
-                else if (message.getData().containsKey(GetFollowersCountTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) message.getData().getSerializable( GetFollowersCountTask.EXCEPTION_KEY);
-                    String eMsg = "Failed to follower count because of exception: " + ex.getMessage();
-                    observer.handleException(eMsg, ex);
-                }
-            }
-            else if (task.equals("followingCount")) {
-                boolean success = bundle.getBoolean(GetFollowingCountTask.SUCCESS_KEY);
-                if (success) {
-                    int count = message.getData().getInt(GetFollowingCountTask.COUNT_KEY);
+            else if (task.equals("followerCount") || task.equals("followingCount")) {
+                int count = bundle.getInt(GetCountTask.COUNT_KEY);
+                if (task.equals("followingCount")) {
                     observer.handleFollowingCountSuccess(count);
                 }
-                else if (message.getData().containsKey(GetFollowingCountTask.MESSAGE_KEY)) {
-                    String eMsg = message.getData().getString(GetFollowingCountTask.MESSAGE_KEY);
-                    observer.handleFailure("Failed to get following count: " + eMsg);
-                }
-                else if (message.getData().containsKey(GetFollowingCountTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) message.getData().getSerializable( GetFollowingCountTask.EXCEPTION_KEY);
-                    String eMsg = "Failed to following count because of exception: " + ex.getMessage();
-                    observer.handleException(eMsg, ex);
+                else {
+                    observer.handleFollowerCountSuccess(count);
                 }
             }
             else if (task.equals("isFollower")) {
-                boolean success = bundle.getBoolean(IsFollowerTask.SUCCESS_KEY);
-                if (success) {
-                    boolean isFollower = message.getData().getBoolean(IsFollowerTask.IS_FOLLOWER_KEY);
-                    observer.handleIsFollowerSuccess(isFollower);
-                }
-                else if (message.getData().containsKey(IsFollowerTask.MESSAGE_KEY)) {
-                    String eMsg = message.getData().getString(IsFollowerTask.MESSAGE_KEY);
-                    observer.handleFailure("Failed to get follow status: " + eMsg);
-                }
-                else if (message.getData().containsKey(IsFollowerTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) message.getData().getSerializable(IsFollowerTask.EXCEPTION_KEY);
-                    String eMsg = "Failed to follow status because of exception: " + ex.getMessage();
-                    observer.handleException(eMsg, ex);
-                }
+                boolean isFollower = bundle.getBoolean(IsFollowerTask.IS_FOLLOWER_KEY);
+                observer.handleIsFollowerSuccess(isFollower);
             }
+        }
+
+        @Override
+        protected void fail (String message) {
+            observer.handleFailure("Follow request failed: " + message);
+        }
+
+        @Override
+        protected void exception (String message, Exception ex) {
+            observer.handleException("Exception during follow request" + message, ex);
         }
     }
 }
