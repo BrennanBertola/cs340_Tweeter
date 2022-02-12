@@ -4,7 +4,6 @@ import android.util.Pair;
 
 import java.util.List;
 
-import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
@@ -61,7 +60,7 @@ public abstract class PagedPresenter<U, T> extends Presenter<U, T> {
     @Override
     public void handleFailure(String message) {
         pagedView.setLoading(false);
-        pagedView.displayErrorMessage(message);
+        pagedView.displayMessage(message);
         logError(message);
         isLoading = false;
     }
@@ -69,7 +68,7 @@ public abstract class PagedPresenter<U, T> extends Presenter<U, T> {
     @Override
     public void handleException(String message, Exception exception) {
         pagedView.setLoading(false);
-        pagedView.displayErrorMessage(message);
+        pagedView.displayMessage(message);
         logError(message);
         isLoading = false;
     }
@@ -104,6 +103,4 @@ public abstract class PagedPresenter<U, T> extends Presenter<U, T> {
         }
         return false;
     }
-
-    public UserService getUserService() {return  new UserService();}
 }

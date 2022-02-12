@@ -9,15 +9,12 @@ import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTask;
 import edu.byu.cs.tweeter.client.backgroundTask.PostStatusTask;
 
 public abstract class MessageHandler extends Handler {
-    protected final String task;
-
     protected abstract void success(Bundle bundle);
     protected abstract void fail (String message);
     protected abstract void exception (String message, Exception ex);
 
-    public MessageHandler(String task) {
+    public MessageHandler() {
         super(Looper.getMainLooper());
-        this.task = task;
     }
 
     @Override

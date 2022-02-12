@@ -73,7 +73,7 @@ public class RegisterFragment extends Fragment implements RegisterPresenter.Regi
     }
 
     @Override
-    public void displayErrorMessage(String msg) {
+    public void displayMessage(String msg) {
         Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
     }
 

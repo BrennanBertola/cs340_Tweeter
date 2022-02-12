@@ -1,16 +1,12 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 import android.util.Log;
-import android.util.Pair;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
-import edu.byu.cs.tweeter.client.service.FollowService;
-import edu.byu.cs.tweeter.client.service.StatusService;
-import edu.byu.cs.tweeter.client.service.UserService;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
@@ -111,6 +107,7 @@ public class MainPresenter extends Presenter<MainPresenter.MainView, User> {
     }
 
     public void post(AuthToken authToken, Status status) {
+        view.displayMessage("Posting Status...");
         getStatusService().post(authToken, status, this);
     }
 

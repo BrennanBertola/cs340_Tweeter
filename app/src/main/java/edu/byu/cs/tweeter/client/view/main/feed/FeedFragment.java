@@ -79,9 +79,10 @@ public class FeedFragment extends Fragment implements FeedPresenter.FeedView {
     public void addItems(List<Status> newStatuses) {feedRecyclerViewAdapter.addItems(newStatuses);}
 
     @Override
-    public void displayErrorMessage(String message) {
+    public void displayMessage(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
     }
+
 
     @Override public void selectUser(User user) {
         Intent intent = new Intent(getContext(), MainActivity.class);

@@ -15,6 +15,10 @@ public abstract class Presenter<U, T> implements UserService.UserObserver,
         StatusService.StatusObserver<T>, FollowService.FollowObserver<T> {
     protected final U view;
 
+    protected UserService userService;
+    protected StatusService statusService;
+    protected FollowService followService;
+
     protected Presenter(U view) {
         this.view = view;
     }
@@ -25,15 +29,15 @@ public abstract class Presenter<U, T> implements UserService.UserObserver,
     @Override
     public void handleFailure(String message) {
         View tmpView = (View) view;
-        tmpView.displayErrorMessage(message);
-        logError(message);
+        tmpView.displayMessage(message);
+        //logError(message);
     }
 
     @Override
     public void handleException(String message, Exception exception) {
         View tmpView = (View) view;
-        tmpView.displayErrorMessage(message);
-        logError(message, exception);
+        tmpView.displayMessage(message);
+        //logError(message, exception);
     }
 
     // all the observer functions are declared in here so the real presenters can only override the ones they need to
@@ -73,7 +77,22 @@ public abstract class Presenter<U, T> implements UserService.UserObserver,
     public void handleRegisterSuccess(User user, AuthToken authToken) {}
 
 
-    public UserService getUserService() {return new UserService();}
-    public FollowService getFollowService() {return new FollowService();}
-    public StatusService getStatusService() {return new StatusService();}
+    public UserService getUserService() {
+        if (userService == null) {
+            userService = new UserService();
+        }
+        return userService;
+    }
+    public FollowService getFollowService() {
+        if (followService == null) {
+            followService = new FollowService();
+        }
+        return followService;
+    }
+    public StatusService getStatusService() {
+        if (statusService == null) {
+            statusService = new StatusService();
+        }
+        return statusService;
+    }
 }

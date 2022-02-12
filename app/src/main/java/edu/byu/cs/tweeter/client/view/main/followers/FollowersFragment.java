@@ -72,7 +72,7 @@ public class FollowersFragment extends Fragment implements FollowerPresenter.Fol
     public void addItems(List<User> newUsers) {followersRecyclerViewAdapter.addItems(newUsers);}
 
     @Override
-    public void displayErrorMessage(String message) {
+    public void displayMessage(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
     }
 

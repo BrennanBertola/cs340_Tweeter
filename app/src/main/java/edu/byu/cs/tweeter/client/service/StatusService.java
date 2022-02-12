@@ -1,14 +1,7 @@
 package edu.byu.cs.tweeter.client.service;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Pair;
 
-import java.util.List;
-
-import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTask;
 import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTaskUtils;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFeedTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
@@ -36,7 +29,7 @@ public class StatusService {
     public GetFeedTask getGetFeedTask(AuthToken authToken, User targetUser, int limit,
                                       Status lastStatus, StatusObserver observer) {
         return new GetFeedTask(authToken, targetUser, limit, lastStatus,
-                new StatusHandler(observer, "getFeed"));
+                new GetFeedHandler(observer));
     }
 
     public void post (AuthToken authToken, Status status, StatusObserver observer) {
@@ -44,7 +37,7 @@ public class StatusService {
         BackgroundTaskUtils.runTask(task);
     }
     public PostStatusTask getPostStatusTask(AuthToken authToken, Status status, StatusObserver observer) {
-        return new PostStatusTask(authToken, status, new StatusHandler(observer, "post"));
+        return new PostStatusTask(authToken, status, new PostHandler(observer));
     }
 
     public void getStory(AuthToken authToken, User targetUser, int limit, Status lastStatus,
@@ -56,36 +49,80 @@ public class StatusService {
     public GetStoryTask getGetStoryTask(AuthToken authToken, User targetUser, int limit,
                                         Status lastStatus, StatusObserver observer) {
         return new GetStoryTask(authToken, targetUser, limit, lastStatus,
-                new StatusHandler(observer, "getStory"));
+                new GetStoryHandler(observer));
     }
 
-    public static class StatusHandler extends MessageHandler {
+    public static class GetFeedHandler extends MessageHandler {
         private final StatusObserver observer;
 
-        public StatusHandler(StatusObserver observer, String task) {
-            super(task);
+        public GetFeedHandler(StatusObserver observer) {
+            super();
             this.observer = observer;
         }
 
         @Override
         protected void success(Bundle bundle) {
-            if (task.equals("post")) {
-                observer.handlePostSuccess();
-            }
-            else if (task.equals("getFeed") || task.equals("getStory")) {
-                PagedTaskHandler<Status> handler = new PagedTaskHandler<>(bundle);
-                observer.handlePagedSuccess(handler.handle());
-            }
+            PagedTaskHandler<Status> handler = new PagedTaskHandler<>(bundle);
+            observer.handlePagedSuccess(handler.handle());
         }
 
         @Override
         protected void fail (String message) {
-            observer.handleFailure("Status Request failed: " + message);
+            observer.handleFailure("Get feed Request failed: " + message);
         }
 
         @Override
         protected void exception (String message, Exception ex) {
-            observer.handleException("Exception during status request: " + message, ex);
+            observer.handleException("Exception during get feed request: " + message, ex);
+        }
+    }
+
+    public static class GetStoryHandler extends MessageHandler {
+        private final StatusObserver observer;
+
+        public GetStoryHandler(StatusObserver observer) {
+            super();
+            this.observer = observer;
+        }
+
+        @Override
+        protected void success(Bundle bundle) {
+            PagedTaskHandler<Status> handler = new PagedTaskHandler<>(bundle);
+            observer.handlePagedSuccess(handler.handle());
+        }
+
+        @Override
+        protected void fail (String message) {
+            observer.handleFailure("Get story Request failed: " + message);
+        }
+
+        @Override
+        protected void exception (String message, Exception ex) {
+            observer.handleException("Exception during get story request: " + message, ex);
+        }
+    }
+
+    public static class PostHandler extends MessageHandler {
+        private final StatusObserver observer;
+
+        public PostHandler(StatusObserver observer) {
+            super();
+            this.observer = observer;
+        }
+
+        @Override
+        public void success(Bundle bundle) {
+            observer.handlePostSuccess();
+        }
+
+        @Override
+        public void fail (String message) {
+            observer.handleFailure("Post request failed: " + message);
+        }
+
+        @Override
+        public void exception (String message, Exception ex) {
+            observer.handleException("Exception during post request: " + message, ex);
         }
     }
 }

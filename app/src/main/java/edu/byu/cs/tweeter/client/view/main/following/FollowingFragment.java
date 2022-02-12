@@ -71,7 +71,7 @@ public class FollowingFragment extends Fragment implements FollowingPresenter.Fo
     public void addItems(List<User> newUsers) {followingRecyclerViewAdapter.addItems(newUsers);}
 
     @Override
-    public void displayErrorMessage(String message) {
+    public void displayMessage(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
     }
 

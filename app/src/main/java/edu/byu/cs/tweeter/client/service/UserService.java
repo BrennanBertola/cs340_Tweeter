@@ -1,9 +1,6 @@
 package edu.byu.cs.tweeter.client.service;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 
 import edu.byu.cs.tweeter.client.backgroundTask.AuthenticateTask;
 import edu.byu.cs.tweeter.client.backgroundTask.BackgroundTaskUtils;
@@ -31,7 +28,7 @@ public class UserService {
         BackgroundTaskUtils.runTask(userTask);
     }
     public GetUserTask getGetUserTask(AuthToken authToken, String alias, UserObserver observer) {
-        return new GetUserTask(authToken, alias, new UserHandler(observer, "getUser"));
+        return new GetUserTask(authToken, alias, new GetUserHandler(observer));
     }
 
     public void login(String username, String password, UserObserver observer) {
@@ -39,7 +36,7 @@ public class UserService {
         BackgroundTaskUtils.runTask(loginTask);
     }
     public LoginTask getLoginTask(String username, String password, UserObserver observer) {
-        return new LoginTask(username, password, new UserHandler(observer, "login"));
+        return new LoginTask(username, password, new LoginHandler(observer));
     }
 
     public void logout(AuthToken authToken, UserObserver observer) {
@@ -47,7 +44,7 @@ public class UserService {
         BackgroundTaskUtils.runTask(task);
     }
     public LogoutTask getLogoutTask(AuthToken authToken, UserObserver observer) {
-        return new LogoutTask(authToken, new UserHandler(observer, "logout"));
+        return new LogoutTask(authToken, new LogoutHandler(observer));
     }
 
     public void register(String first, String last, String username, String password,
@@ -57,47 +54,107 @@ public class UserService {
     }
     public RegisterTask getRegisterTask(String first, String last, String username, String password,
                                         String image, UserObserver observer) {
-        return new RegisterTask(first, last, username, password, image, new UserHandler(observer, "register"));
+        return new RegisterTask(first, last, username, password, image, new RegisterHandler(observer));
     }
 
-    public static class UserHandler extends MessageHandler {
+    public static class LogoutHandler extends MessageHandler {
         private final UserObserver observer;
 
-        public UserHandler(UserObserver observer, String task) {
-            super(task);
+        public LogoutHandler(UserObserver observer) {
+            super();
             this.observer = observer;
         }
 
         @Override
         protected void success(Bundle bundle) {
-            if (task.equals("logout")) {
-                observer.handleLogoutSuccess();
-            }
-            else if (task.equals("getUser") || task.equals("login") || task.equals("register")) {
-                User user = (User) bundle.getSerializable(AuthenticateTask.USER_KEY);
-                if (task.equals("getUser")) {
-                    observer.handleUserSuccess(user);
-                }
-                else {
-                    AuthToken authToken = (AuthToken) bundle.getSerializable(AuthenticateTask.AUTH_TOKEN_KEY);
-                    if (task.equals("login")) {
-                        observer.handleLoginSuccess(user, authToken);
-                    }
-                    else {
-                        observer.handleRegisterSuccess(user, authToken);
-                    }
-                }
-            }
+            observer.handleLogoutSuccess();
         }
 
         @Override
         protected void fail (String message) {
-            observer.handleFailure("User Request failed: " + message);
+            observer.handleFailure("Logout Request failed: " + message);
         }
 
         @Override
         protected void exception (String message, Exception ex) {
-            observer.handleException("Exception during user request: " + message, ex);
+            observer.handleException("Exception during logout request: " + message, ex);
+        }
+    }
+
+    public static class LoginHandler extends MessageHandler {
+        private final UserObserver observer;
+
+        public LoginHandler(UserObserver observer) {
+            super();
+            this.observer = observer;
+        }
+
+        @Override
+        protected void success(Bundle bundle) {
+            User user = (User) bundle.getSerializable(AuthenticateTask.USER_KEY);
+            AuthToken authToken = (AuthToken) bundle.getSerializable(AuthenticateTask.AUTH_TOKEN_KEY);
+            observer.handleLoginSuccess(user, authToken);
+        }
+
+        @Override
+        protected void fail (String message) {
+            observer.handleFailure("Login Request failed: " + message);
+        }
+
+        @Override
+        protected void exception (String message, Exception ex) {
+            observer.handleException("Exception during Login request: " + message, ex);
+        }
+    }
+
+    public static class RegisterHandler extends MessageHandler {
+        private final UserObserver observer;
+
+        public RegisterHandler(UserObserver observer) {
+            super();
+            this.observer = observer;
+        }
+
+        @Override
+        protected void success(Bundle bundle) {
+            User user = (User) bundle.getSerializable(AuthenticateTask.USER_KEY);
+            AuthToken authToken = (AuthToken) bundle.getSerializable(AuthenticateTask.AUTH_TOKEN_KEY);
+            observer.handleRegisterSuccess(user, authToken);
+        }
+
+        @Override
+        protected void fail (String message) {
+            observer.handleFailure("Register Request failed: " + message);
+        }
+
+        @Override
+        protected void exception (String message, Exception ex) {
+            observer.handleException("Exception during register request: " + message, ex);
+        }
+    }
+
+    public static class GetUserHandler extends MessageHandler {
+        private final UserObserver observer;
+
+        public GetUserHandler(UserObserver observer) {
+            super();
+            this.observer = observer;
+        }
+
+        @Override
+        protected void success(Bundle bundle) {
+            User user = (User) bundle.getSerializable(AuthenticateTask.USER_KEY);
+            observer.handleUserSuccess(user);
+        }
+
+        @Override
+        protected void fail (String message) {
+            observer.handleFailure("Get user Request failed: " + message);
+        }
+
+        @Override
+        protected void exception (String message, Exception ex) {
+            observer.handleException("Exception during get user request: " + message, ex);
         }
     }
 }

@@ -79,7 +79,7 @@ public class StoryFragment extends Fragment implements StoryPresenter.StoryView 
     public void addItems(List<Status> newStatuses) {storyRecyclerViewAdapter.addItems(newStatuses);}
 
     @Override
-    public void displayErrorMessage(String message) {
+    public void displayMessage(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
     }
 
