@@ -8,13 +8,16 @@ import android.util.Log;
 import java.io.IOException;
 
 import edu.byu.cs.tweeter.util.FakeData;
+import edu.byu.cs.tweeter.client.net.*;
 
 public abstract class BackgroundTask implements Runnable {
-    private static final String LOG_TAG = "BackgroundTask";
+    public static final String LOG_TAG = "BackgroundTask";
 
     public static final String SUCCESS_KEY = "success";
     public static final String MESSAGE_KEY = "message";
     public static final String EXCEPTION_KEY = "exception";
+
+    protected ServerFacade serverFacade;
 
     /**
      * Message handler that will receive task results.
@@ -89,5 +92,12 @@ public abstract class BackgroundTask implements Runnable {
         Message msg = Message.obtain();
         msg.setData(msgBundle);
         messageHandler.sendMessage(msg);
+    }
+
+    public ServerFacade getServerFacade() {
+        if(serverFacade == null) {
+            serverFacade = new ServerFacade();
+        }
+        return new ServerFacade();
     }
 }

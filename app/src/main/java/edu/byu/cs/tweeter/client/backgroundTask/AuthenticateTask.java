@@ -14,9 +14,9 @@ public abstract class AuthenticateTask extends BackgroundTask {
     public static final String USER_KEY = "user";
     public static final String AUTH_TOKEN_KEY = "auth-token";
 
-    private User authenticatedUser;
+    protected User authenticatedUser;
 
-    private AuthToken authToken;
+    protected AuthToken authToken;
 
     /**
      * The user's username (or "alias" or "handle"). E.g., "@susan".

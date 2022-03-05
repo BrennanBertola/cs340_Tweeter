@@ -4,14 +4,10 @@ import java.util.List;
 import java.util.Objects;
 
 import edu.byu.cs.tweeter.model.domain.User;
-import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
 
-/**
- * A paged response for a {@link FollowingRequest}.
- */
-public class FollowingResponse extends PagedResponse {
+public class FollowerResponse extends PagedResponse{
 
-    private List<User> followees;
+    private List<User> followers;
 
     /**
      * Creates a response indicating that the corresponding request was unsuccessful. Sets the
@@ -19,14 +15,14 @@ public class FollowingResponse extends PagedResponse {
      *
      * @param message a message describing why the request was unsuccessful.
      */
-    public FollowingResponse(String message) {
+    public FollowerResponse(String message) {
         super(false, message, false);
     }
 
 
-    public FollowingResponse(List<User> items, boolean hasMorePages) {
+    public FollowerResponse(List<User> items, boolean hasMorePages) {
         super(true, hasMorePages);
-        this.followees = items;
+        this.followers = items;
     }
 
     /**
@@ -34,8 +30,8 @@ public class FollowingResponse extends PagedResponse {
      *
      * @return the followees.
      */
-    public List<User> getFollowees() {
-        return followees;
+    public List<User> getFollowers() {
+        return followers;
     }
 
     @Override
@@ -48,15 +44,15 @@ public class FollowingResponse extends PagedResponse {
             return false;
         }
 
-        FollowingResponse that = (FollowingResponse) param;
+        FollowerResponse that = (FollowerResponse) param;
 
-        return (Objects.equals(followees, that.followees) &&
+        return (Objects.equals(followers, that.followers) &&
                 Objects.equals(this.getMessage(), that.getMessage()) &&
                 this.isSuccess() == that.isSuccess());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(followees);
+        return Objects.hash(followers);
     }
 }

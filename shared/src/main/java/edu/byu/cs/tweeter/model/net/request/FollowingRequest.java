@@ -6,11 +6,7 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
  * Contains all the information needed to make a request to have the server return the next page of
  * followees for a specified follower.
  */
-public class FollowingRequest {
-
-    private AuthToken authToken;
-    private String followerAlias;
-    private int limit;
+public class FollowingRequest extends FollowRequest{
     private String lastFolloweeAlias;
 
     /**
@@ -32,60 +28,6 @@ public class FollowingRequest {
         this.followerAlias = followerAlias;
         this.limit = limit;
         this.lastFolloweeAlias = lastFolloweeAlias;
-    }
-
-    /**
-     * Returns the auth token of the user who is making the request.
-     *
-     * @return the auth token.
-     */
-    public AuthToken getAuthToken() {
-        return authToken;
-    }
-
-    /**
-     * Sets the auth token.
-     *
-     * @param authToken the auth token.
-     */
-    public void setAuthToken(AuthToken authToken) {
-        this.authToken = authToken;
-    }
-
-    /**
-     * Returns the follower whose followees are to be returned by this request.
-     *
-     * @return the follower.
-     */
-    public String getFollowerAlias() {
-        return followerAlias;
-    }
-
-    /**
-     * Sets the follower.
-     *
-     * @param followerAlias the follower.
-     */
-    public void setFollowerAlias(String followerAlias) {
-        this.followerAlias = followerAlias;
-    }
-
-    /**
-     * Returns the number representing the maximum number of followees to be returned by this request.
-     *
-     * @return the limit.
-     */
-    public int getLimit() {
-        return limit;
-    }
-
-    /**
-     * Sets the limit.
-     *
-     * @param limit the limit.
-     */
-    public void setLimit(int limit) {
-        this.limit = limit;
     }
 
     /**
