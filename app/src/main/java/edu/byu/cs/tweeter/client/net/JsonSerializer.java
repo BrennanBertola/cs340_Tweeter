@@ -5,7 +5,8 @@ import com.google.gson.Gson;
 public class JsonSerializer {
 
     public static String serialize(Object requestInfo) {
-        return (new Gson()).toJson(requestInfo);
+        String tmp = (new Gson()).toJson(requestInfo);
+        return tmp;
     }
 
     public static <T> T deserialize(String value, Class<T> returnType) {

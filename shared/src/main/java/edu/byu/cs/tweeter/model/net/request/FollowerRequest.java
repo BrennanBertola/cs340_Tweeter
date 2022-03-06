@@ -4,12 +4,12 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 
 public class FollowerRequest  {
 
-    private AuthToken authToken;
-    private String target;
-    private int limit;
-    private String last;
+    public AuthToken authToken;
+    public String target;
+    public int limit;
+    public String last;
 
-    private FollowerRequest() {}
+    public FollowerRequest() {}
 
 
     public FollowerRequest(AuthToken authToken, String target, int limit, String last) {

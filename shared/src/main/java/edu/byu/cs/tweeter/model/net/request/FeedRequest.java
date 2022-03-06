@@ -5,12 +5,12 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 
 public class FeedRequest  {
 
-    private AuthToken authToken;
-    private String target;
-    private int limit;
-    private String last;
+    public AuthToken authToken;
+    public String target;
+    public int limit;
+    public String last;
 
-    private FeedRequest() {}
+    public FeedRequest() {}
 
 
     public FeedRequest(AuthToken authToken, String target, int limit, String last) {

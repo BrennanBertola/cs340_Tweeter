@@ -5,13 +5,13 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 
 public class FollowingRequest {
 
-    private AuthToken authToken;
-    private String target;
-    private int limit;
-    private String last;
+    public AuthToken authToken;
+    public String target;
+    public int limit;
+    public String last;
 
 
-    private FollowingRequest() {}
+    public FollowingRequest() {}
 
     public FollowingRequest(AuthToken authToken, String target, int limit, String last) {
         this.authToken = authToken;

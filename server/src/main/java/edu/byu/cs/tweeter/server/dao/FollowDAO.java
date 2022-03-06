@@ -2,6 +2,7 @@ package edu.byu.cs.tweeter.server.dao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
@@ -9,11 +10,13 @@ import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FolloweeCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.util.FakeData;
 
 /**
@@ -29,6 +32,16 @@ public class FollowDAO {
     public FollowerCountResponse getFollowerCount(FollowerCountRequest request) {
         // TODO: uses the dummy data.  Replace with a real implementation.
         return new FollowerCountResponse(getDummyFollowers().size());
+    }
+
+    public IsFollowerResponse isFollower(IsFollowerRequest request) {
+        boolean isFollower = new Random().nextInt() > 0;
+        if (isFollower) {
+            return new IsFollowerResponse("yes");
+        }
+        else {
+            return new IsFollowerResponse("no");
+        }
     }
 
     /**

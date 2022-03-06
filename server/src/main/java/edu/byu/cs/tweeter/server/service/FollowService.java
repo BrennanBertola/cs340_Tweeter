@@ -5,11 +5,13 @@ import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FolloweeCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
 
 /**
@@ -54,6 +56,16 @@ public class FollowService {
         return getFollowDAO().follow(request);
     }
 
+    public IsFollowerResponse isFollower(IsFollowerRequest request) {
+        if(request.getFollower() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a follower alias");
+        } else if(request.getFollowee() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have an followee");
+        }
+
+        return getFollowDAO().isFollower(request);
+    }
+
     public FollowerCountResponse getFollowerCount(FollowerCountRequest request) {
         if (request.getTargetUserAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a target alias");
@@ -67,6 +79,8 @@ public class FollowService {
         }
         return getFollowDAO().getFolloweeCount(request);
     }
+
+
 
     /**
      * Returns an instance of {@link FollowDAO}. Allows mocking of the FollowDAO class

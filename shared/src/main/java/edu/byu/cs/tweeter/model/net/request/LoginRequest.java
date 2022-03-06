@@ -5,13 +5,13 @@ package edu.byu.cs.tweeter.model.net.request;
  */
 public class LoginRequest {
 
-    private String username;
-    private String password;
+    public String username;
+    public String password;
 
     /**
      * Allows construction of the object from Json. Private so it won't be called in normal code.
      */
-    private LoginRequest() {}
+    public LoginRequest() {}
 
     /**
      * Creates an instance.

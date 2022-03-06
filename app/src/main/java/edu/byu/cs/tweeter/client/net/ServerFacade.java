@@ -10,6 +10,7 @@ import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.request.StoryRequest;
 import edu.byu.cs.tweeter.model.net.request.UserRequest;
@@ -19,6 +20,7 @@ import edu.byu.cs.tweeter.model.net.response.FolloweeCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.StoryResponse;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
@@ -141,6 +143,17 @@ public class ServerFacade {
 
     public UserResponse getUser(UserRequest request, String urlPath) throws IOException, TweeterRemoteException {
         UserResponse response = clientCommunicator.doPost(urlPath, request, null, UserResponse.class);
+
+        if (response.isSuccess()) {
+            return response;
+        }
+        else {
+            throw new RuntimeException(response.getMessage());
+        }
+    }
+
+    public IsFollowerResponse isFollower (IsFollowerRequest request, String urlPath) throws IOException, TweeterRemoteException {
+        IsFollowerResponse response = clientCommunicator.doPost(urlPath, request, null, IsFollowerResponse.class);
 
         if (response.isSuccess()) {
             return response;
