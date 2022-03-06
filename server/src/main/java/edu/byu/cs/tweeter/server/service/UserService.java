@@ -3,7 +3,9 @@ package edu.byu.cs.tweeter.server.service;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
+import edu.byu.cs.tweeter.model.net.request.UserRequest;
 import edu.byu.cs.tweeter.model.net.response.LoginResponse;
+import edu.byu.cs.tweeter.model.net.response.UserResponse;
 import edu.byu.cs.tweeter.util.FakeData;
 
 public class UserService {
@@ -16,21 +18,27 @@ public class UserService {
         }
 
         // TODO: Generates dummy data. Replace with a real implementation.
-        User user = getDummyUser();
+        User user = getDummyLogin();
         AuthToken authToken = getDummyAuthToken();
         return new LoginResponse(user, authToken);
     }
 
+    public UserResponse getUser(UserRequest request) {
+        if (request.getTargetUserAlias() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a target alias");
+        }
+        return new UserResponse(getDummyUser(request.getTargetUserAlias()));
+    }
     /**
      * Returns the dummy user to be returned by the login operation.
      * This is written as a separate method to allow mocking of the dummy user.
      *
      * @return a dummy user.
      */
-    User getDummyUser() {
+    User getDummyLogin() {
         return getFakeData().getFirstUser();
     }
-
+    User getDummyUser(String alias) {return getFakeData().findUserByAlias(alias);}
     /**
      * Returns the dummy auth token to be returned by the login operation.
      * This is written as a separate method to allow mocking of the dummy auth token.
