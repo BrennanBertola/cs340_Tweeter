@@ -4,8 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.byu.cs.tweeter.model.domain.User;
+import edu.byu.cs.tweeter.model.net.request.FollowRequest;
+import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
+import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.response.FollowResponse;
+import edu.byu.cs.tweeter.model.net.response.FolloweeCountResponse;
+import edu.byu.cs.tweeter.model.net.response.FollowerCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.util.FakeData;
@@ -15,17 +21,14 @@ import edu.byu.cs.tweeter.util.FakeData;
  */
 public class FollowDAO {
 
-    /**
-     * Gets the count of users from the database that the user specified is following. The
-     * current implementation uses generated data and doesn't actually access a database.
-     *
-     * @param follower the User whose count of how many following is desired.
-     * @return said count.
-     */
-    public Integer getFolloweeCount(User follower) {
+    public FolloweeCountResponse getFolloweeCount(FolloweeCountRequest request) {
         // TODO: uses the dummy data.  Replace with a real implementation.
-        assert follower != null;
-        return getDummyFollowees().size();
+        return new FolloweeCountResponse(getDummyFollowees().size());
+    }
+
+    public FollowerCountResponse getFollowerCount(FollowerCountRequest request) {
+        // TODO: uses the dummy data.  Replace with a real implementation.
+        return new FollowerCountResponse(getDummyFollowers().size());
     }
 
     /**
@@ -40,8 +43,6 @@ public class FollowDAO {
      */
     public FollowingResponse getFollowees(FollowingRequest request) {
         // TODO: Generates dummy data. Replace with a real implementation.
-        assert request.getLimit() > 0;
-        assert request.getFollowerAlias() != null;
 
         List<User> allFollowees = getDummyFollowees();
         List<User> responseFollowees = new ArrayList<>(request.getLimit());
@@ -50,7 +51,7 @@ public class FollowDAO {
 
         if(request.getLimit() > 0) {
             if (allFollowees != null) {
-                int followeesIndex = getFolloweesStartingIndex(request.getLastFolloweeAlias(), allFollowees);
+                int followeesIndex = getFolloweesStartingIndex(request.getLast(), allFollowees);
 
                 for(int limitCounter = 0; followeesIndex < allFollowees.size() && limitCounter < request.getLimit(); followeesIndex++, limitCounter++) {
                     responseFollowees.add(allFollowees.get(followeesIndex));
@@ -65,8 +66,6 @@ public class FollowDAO {
 
     public FollowerResponse getFollowers(FollowerRequest request) {
         // TODO: Generates dummy data. Replace with a real implementation.
-        assert request.getLimit() > 0;
-        assert request.getFollowerAlias() != null;
 
         List<User> allFollowers = getDummyFollowers();
         List<User> responseFollowers = new ArrayList<>(request.getLimit());
@@ -75,7 +74,7 @@ public class FollowDAO {
 
         if(request.getLimit() > 0) {
             if (allFollowers != null) {
-                int followeesIndex = getFolloweesStartingIndex(request.getLastFollowerAlias(), allFollowers);
+                int followeesIndex = getFolloweesStartingIndex(request.getLast(), allFollowers);
 
                 for(int limitCounter = 0; followeesIndex < allFollowers.size() && limitCounter < request.getLimit(); followeesIndex++, limitCounter++) {
                     responseFollowers.add(allFollowers.get(followeesIndex));
@@ -86,6 +85,13 @@ public class FollowDAO {
         }
 
         return new FollowerResponse(responseFollowers, hasMorePages);
+    }
+
+    public FollowResponse follow(FollowRequest request) {
+        assert request.getAuthToken() != null;
+        assert request.getTargetUserAlias() != null;
+
+        return new FollowResponse(true);
     }
 
     /**

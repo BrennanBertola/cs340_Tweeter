@@ -2,22 +2,17 @@ package edu.byu.cs.tweeter.model.net.request;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 
-
-public class FollowingRequest {
+public class FolloweeCountRequest {
 
     private AuthToken authToken;
     private String target;
-    private int limit;
-    private String last;
 
 
-    private FollowingRequest() {}
+    private FolloweeCountRequest() {}
 
-    public FollowingRequest(AuthToken authToken, String target, int limit, String last) {
+    public FolloweeCountRequest(AuthToken authToken, String target) {
         this.authToken = authToken;
         this.target = target;
-        this.limit = limit;
-        this.last = last;
     }
 
 
@@ -30,17 +25,6 @@ public class FollowingRequest {
         this.authToken = authToken;
     }
 
-
-    public int getLimit() {
-        return limit;
-    }
-
-
-    public void setLimit(int limit) {
-        this.limit = limit;
-    }
-
-
     public String getTarget() {
         return target;
     }
@@ -48,13 +32,4 @@ public class FollowingRequest {
     public void setTarget(String target) {
         this.target = target;
     }
-
-    public String getLast() {
-        return last;
-    }
-
-    public void setLast(String last) {
-        this.last = last;
-    }
 }
-

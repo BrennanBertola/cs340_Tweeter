@@ -22,7 +22,5 @@ public abstract class PagedUserTask extends PagedTask<User> {
         return items;
     }
 
-    abstract String getURLPath();
-    abstract String getExceptionMsg();
 
 }

@@ -26,16 +26,6 @@ public class GetFollowingTask extends PagedUserTask {
     }
 
     @Override
-    String getURLPath() {
-        return URL_PATH;
-    }
-
-    @Override
-    String getExceptionMsg() {
-        return "Exception in GetFollowingTask.";
-    }
-
-    @Override
     protected Pair<List<User>, Boolean> getItems() {
         return getFakeData().getPageOfUsers(getLastItem(), getLimit(), getTargetUser());
     }
@@ -47,7 +37,7 @@ public class GetFollowingTask extends PagedUserTask {
             String lastFolloweeAlias = lastItem == null ? null : lastItem.getAlias();
 
             FollowingRequest request = new FollowingRequest(authToken, targetUserAlias, limit, lastFolloweeAlias);
-            FollowingResponse response = getServerFacade().getFollowing(request, getURLPath());
+            FollowingResponse response = getServerFacade().getFollowing(request, URL_PATH);
 
             if(response.isSuccess()) {
                 this.items = response.getFollowees();
@@ -58,7 +48,7 @@ public class GetFollowingTask extends PagedUserTask {
                 sendFailedMessage(response.getMessage());
             }
         } catch (IOException | TweeterRemoteException ex) {
-            Log.e(LOG_TAG, getExceptionMsg(), ex);
+            Log.e(LOG_TAG, "Exception in get Following task", ex);
             sendExceptionMessage(ex);
         }
     }

@@ -14,9 +14,9 @@ public abstract class GetCountTask extends AuthenticatedTask {
      * The user whose count is being retrieved.
      * (This can be any user, not just the currently logged-in user.)
      */
-    private final User targetUser;
+    protected final User targetUser;
 
-    private int count;
+    protected int count;
 
     protected GetCountTask(AuthToken authToken, User targetUser, Handler messageHandler) {
         super(authToken, messageHandler);
@@ -29,15 +29,20 @@ public abstract class GetCountTask extends AuthenticatedTask {
 
     @Override
     protected void runTask() {
-        count = runCountTask();
+        String result = runCountTask();
 
         // Call sendSuccessMessage if successful
-        sendSuccessMessage();
+        if (result == null) {
+            sendSuccessMessage();
+        }
+        else {
+            sendFailedMessage(result);
+        }
         // or call sendFailedMessage if not successful
         // sendFailedMessage()
     }
 
-    protected abstract int runCountTask();
+    protected abstract String runCountTask();
 
     @Override
     protected void loadSuccessBundle(Bundle msgBundle) {
