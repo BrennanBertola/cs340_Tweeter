@@ -6,12 +6,14 @@ import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
 import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
+import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FolloweeCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
+import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
 
 /**
@@ -54,6 +56,16 @@ public class FollowService {
         }
 
         return getFollowDAO().follow(request);
+    }
+
+    public UnfollowResponse unfollow(UnfollowRequest request) {
+        if(request.getTargetUserAlias() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a target alias");
+        } else if(request.getAuthToken() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have an authtoken");
+        }
+
+        return getFollowDAO().unfollow(request);
     }
 
     public IsFollowerResponse isFollower(IsFollowerRequest request) {
