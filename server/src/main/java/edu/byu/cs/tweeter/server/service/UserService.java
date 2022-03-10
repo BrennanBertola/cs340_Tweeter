@@ -4,9 +4,11 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.request.LogoutRequest;
+import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
 import edu.byu.cs.tweeter.model.net.request.UserRequest;
 import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.LogoutResponse;
+import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
 import edu.byu.cs.tweeter.util.FakeData;
 
@@ -33,6 +35,28 @@ public class UserService {
         return new LogoutResponse(true);
     }
 
+    public RegisterResponse register(RegisterRequest request) {
+        if (request.getFirstName() == null) {
+            throw new RuntimeException("[BadRequest] Missing a first name");
+        }
+        else if (request.getLastName() == null) {
+            throw new RuntimeException("[BadRequest] Missing a last name");
+        }
+        else if (request.getUsername() == null) {
+            throw new RuntimeException("[BadRequest] Missing a username");
+        }
+        else if (request.getPassword() == null) {
+            throw new RuntimeException("[BadRequest] Missing a password");
+        }
+        else if (request.getImage() == null) {
+            throw new RuntimeException("[BadRequest] Missing an image");
+        }
+
+        User user = getDummyRegister();
+        AuthToken authToken = getDummyAuthToken();
+        return new RegisterResponse(user, authToken);
+    }
+
     public UserResponse getUser(UserRequest request) {
         if (request.getTargetUserAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a target alias");
@@ -46,6 +70,9 @@ public class UserService {
      * @return a dummy user.
      */
     User getDummyLogin() {
+        return getFakeData().getFirstUser();
+    }
+    User getDummyRegister() {
         return getFakeData().getFirstUser();
     }
     User getDummyUser(String alias) {return getFakeData().findUserByAlias(alias);}
