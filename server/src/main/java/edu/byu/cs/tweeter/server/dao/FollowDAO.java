@@ -35,13 +35,8 @@ public class FollowDAO {
     }
 
     public IsFollowerResponse isFollower(IsFollowerRequest request) {
-        boolean isFollower = new Random().nextInt() > 0;
-        if (isFollower) {
-            return new IsFollowerResponse("yes");
-        }
-        else {
-            return new IsFollowerResponse("no");
-        }
+        int isFollower = new Random().nextInt() % 2;
+        return new IsFollowerResponse(isFollower);
     }
 
     /**

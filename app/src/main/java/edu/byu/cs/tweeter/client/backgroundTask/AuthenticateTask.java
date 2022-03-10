@@ -39,13 +39,15 @@ public abstract class AuthenticateTask extends BackgroundTask {
     protected final void runTask()  throws IOException {
         Pair<User, AuthToken> loginResult = runAuthenticationTask();
 
-        authenticatedUser = loginResult.getFirst();
-        authToken = loginResult.getSecond();
+        if (loginResult != null) {
+            authenticatedUser = loginResult.getFirst();
+            authToken = loginResult.getSecond();
 
-        // Call sendSuccessMessage if successful
-        sendSuccessMessage();
-        // or call sendFailedMessage if not successful
-        // sendFailedMessage()
+            // Call sendSuccessMessage if successful
+            sendSuccessMessage();
+            // or call sendFailedMessage if not successful
+            // sendFailedMessage()
+        }
     }
 
     protected abstract Pair<User, AuthToken> runAuthenticationTask();

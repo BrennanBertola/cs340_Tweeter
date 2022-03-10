@@ -1,7 +1,7 @@
 package edu.byu.cs.tweeter.model.net.response;
 
 public class IsFollowerResponse extends Response{
-    boolean isFollower;
+    public boolean isFollower = true;
 
     IsFollowerResponse(boolean success) {
         super(success);
@@ -11,13 +11,13 @@ public class IsFollowerResponse extends Response{
         super(success, message);
     }
 
-    public IsFollowerResponse(String isFollower) {
+    public IsFollowerResponse(int isFollower) {
         super(true);
-        if (isFollower.equals("yes")) {
-            this.isFollower = true;
+        if (isFollower == 1) {
+            this.isFollower = false;
         }
         else {
-            this.isFollower = false;
+            this.isFollower = true;
         }
     }
 

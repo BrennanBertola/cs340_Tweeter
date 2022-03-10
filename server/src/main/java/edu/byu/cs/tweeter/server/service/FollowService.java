@@ -62,6 +62,9 @@ public class FollowService {
         } else if(request.getFollowee() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an followee");
         }
+        else if (request.getAuthToken() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have an authtoken");
+        }
 
         return getFollowDAO().isFollower(request);
     }

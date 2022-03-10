@@ -42,7 +42,6 @@ public class IsFollowerTask extends AuthenticatedTask {
 
     @Override
     protected void runTask() {
-        isFollower = new Random().nextInt() > 0;
         try {
             String followerAlias = follower == null ? null : follower.getAlias();
             String followeeAlias = followee == null ? null : followee.getAlias();
