@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.util.Log;
 
 import java.io.IOException;
-import java.util.Random;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;

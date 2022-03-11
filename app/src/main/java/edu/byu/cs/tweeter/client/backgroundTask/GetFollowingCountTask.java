@@ -10,9 +10,7 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
 import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
-import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
 import edu.byu.cs.tweeter.model.net.response.FolloweeCountResponse;
-import edu.byu.cs.tweeter.model.net.response.FollowerCountResponse;
 
 /**
  * Background task that queries how many other users a specified user is following.
