@@ -12,7 +12,7 @@ import java.util.Date;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 
-public class AuthTokenDynamoDAO implements AuthTokenDAO{
+public class AuthTokenDynamoDAO extends DynamoDAO implements AuthTokenDAO{
     private static AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder
             .standard()
             .withRegion("us-west-2")
@@ -22,7 +22,7 @@ public class AuthTokenDynamoDAO implements AuthTokenDAO{
 
 
     @Override
-    public AuthToken createToken() {
+    public AuthToken createToken(String alias) {
         byte[] rand = new byte[24];
         SecureRandom secure = new SecureRandom();
         Base64.Encoder encoder = Base64.getUrlEncoder();
@@ -35,7 +35,9 @@ public class AuthTokenDynamoDAO implements AuthTokenDAO{
         Table table = dynamoDB.getTable(TableName);
 
         table = dynamoDB.getTable("AuthToken");
-        Item item = new Item().withPrimaryKey("AuthToken", token).withNumber("timestamp", timestamp);
+        Item item = new Item().withPrimaryKey("AuthToken", token)
+                .withNumber("timestamp", timestamp)
+                .withString("alias", alias);
         table.putItem(item);
 
         AuthToken authToken = new AuthToken(token, String.valueOf(timestamp));

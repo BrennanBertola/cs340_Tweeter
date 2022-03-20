@@ -11,4 +11,5 @@ import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 public interface UserDAO extends DAO {
     User login(LoginRequest request);
     User register(RegisterRequest request);
+
 }

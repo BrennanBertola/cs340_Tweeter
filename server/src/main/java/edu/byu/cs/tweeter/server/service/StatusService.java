@@ -8,6 +8,8 @@ import edu.byu.cs.tweeter.model.net.request.StoryRequest;
 import edu.byu.cs.tweeter.model.net.response.FeedResponse;
 import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
 import edu.byu.cs.tweeter.model.net.response.StoryResponse;
+import edu.byu.cs.tweeter.server.dao.FeedDAO;
+import edu.byu.cs.tweeter.server.dao.FeedDynamoDAO;
 import edu.byu.cs.tweeter.server.dao.StatusDAO;
 import edu.byu.cs.tweeter.server.factory.DAOFactory;
 
@@ -22,7 +24,10 @@ public class StatusService {
             throw new RuntimeException("[BadRequest] Request needs to have a positive limit");
         }
 
-        return getStatusDAO().getFeed(request);
+//
+//        return getStatusDAO().getFeed(request);
+        FeedDAO fDAO = factory.getFeedDAO();
+        return fDAO.getFeed(request);
     }
 
     public StoryResponse getStory(StoryRequest request) {

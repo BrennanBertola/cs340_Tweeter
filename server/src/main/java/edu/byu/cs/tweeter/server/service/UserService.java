@@ -31,7 +31,7 @@ public class UserService {
         UserDAO uDAO = factory.getUserDAO();
         AuthTokenDAO aDAO = factory.getAuthTokenDAO();
         User user = uDAO.login(request);
-        AuthToken token = aDAO.createToken();
+        AuthToken token = aDAO.createToken(request.getUsername());
 
         return new LoginResponse(user, token);
     }
@@ -67,7 +67,7 @@ public class UserService {
         UserDAO uDAO = factory.getUserDAO();
         AuthTokenDAO aDAO = factory.getAuthTokenDAO();
         User user = uDAO.register(request);
-        AuthToken token = aDAO.createToken();
+        AuthToken token = aDAO.createToken(request.getUsername());
         return new RegisterResponse(user, token);
     }
 

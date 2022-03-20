@@ -23,7 +23,7 @@ import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.LogoutResponse;
 import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 
-public class UserDynamoDAO implements UserDAO {
+public class UserDynamoDAO extends DynamoDAO implements UserDAO {
     private static AmazonS3 s3 = AmazonS3ClientBuilder
             .standard()
             .withRegion("us-west-2")
@@ -89,4 +89,6 @@ public class UserDynamoDAO implements UserDAO {
         User user = new User(first, last, alias, defaultURL);
         return user;
     }
+
+
 }

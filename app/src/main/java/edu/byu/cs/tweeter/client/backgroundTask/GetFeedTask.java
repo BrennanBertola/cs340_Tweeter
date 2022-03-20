@@ -35,7 +35,8 @@ public class GetFeedTask extends PagedStatusTask {
     protected final void runTask() {
         try {
             String targetUserAlias = targetUser == null ? null : targetUser.getAlias();
-            String lastStatus = lastItem == null ? null : lastItem.getPost();
+            String lastStatus = lastItem == null ? null : lastItem.getDate();
+
 
             FeedRequest request = new FeedRequest(authToken, targetUserAlias, limit, lastStatus);
             FeedResponse response = getServerFacade().getFeed(request, URL_PATH);
