@@ -53,7 +53,8 @@ public class FollowService {
         } else if(request.getLimit() <= 0) {
             throw new RuntimeException("[BadRequest] Request needs to have a positive limit");
         }
-        return getFollowDAO().getFollowers(request);
+        FollowsDAO fDAO = factory.getFollowDAO();
+        return fDAO.getFollower(request);
     }
 
     public FollowResponse follow(FollowRequest request) {
