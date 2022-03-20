@@ -6,9 +6,14 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
+import edu.byu.cs.tweeter.model.domain.Status;
+import edu.byu.cs.tweeter.model.domain.User;
 
 public abstract class DynamoDAO {
     private static AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder
@@ -32,13 +37,10 @@ public abstract class DynamoDAO {
             return false;
         }
 
-        if (!alias.equals(item.getString("alias"))) {
-            table.deleteItem("AuthToken", token.getToken());
-            return false;
-        }
-
         return true;
     }
+
+
 }
 
 

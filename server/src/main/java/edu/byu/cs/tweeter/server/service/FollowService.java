@@ -15,6 +15,7 @@ import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
+import edu.byu.cs.tweeter.server.dao.FollowsDAO;
 import edu.byu.cs.tweeter.server.factory.DAOFactory;
 
 /**
@@ -42,7 +43,8 @@ public class FollowService {
         } else if(request.getLimit() <= 0) {
             throw new RuntimeException("[BadRequest] Request needs to have a positive limit");
         }
-        return getFollowDAO().getFollowees(request);
+        FollowsDAO fDAO = factory.getFollowDAO();
+        return fDAO.getFollowing(request);
     }
 
     public FollowerResponse getFollowers(FollowerRequest request) {
