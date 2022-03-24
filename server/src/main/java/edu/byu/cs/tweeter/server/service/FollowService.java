@@ -75,7 +75,8 @@ public class FollowService {
             throw new RuntimeException("[BadRequest] Request needs to have an authtoken");
         }
 
-        return getFollowDAO().unfollow(request);
+        FollowsDAO fDAO = factory.getFollowDAO();
+        return fDAO.unfollow(request);
     }
 
     public IsFollowerResponse isFollower(IsFollowerRequest request) {
@@ -88,7 +89,8 @@ public class FollowService {
             throw new RuntimeException("[BadRequest] Request needs to have an authtoken");
         }
 
-        return getFollowDAO().isFollower(request);
+        FollowsDAO fDAO = factory.getFollowDAO();
+        return fDAO.isFollower(request);
     }
 
     public FollowerCountResponse getFollowerCount(FollowerCountRequest request) {

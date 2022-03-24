@@ -22,9 +22,13 @@ import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
+import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
+import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 
 public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO {
     private static AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder
@@ -129,6 +133,44 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
         Item item = new Item().withPrimaryKey(getPK(), alias, "followee_handle", request.getTargetUserAlias());
         table.putItem(item);
 
+        new FeedDynamoDAO().addAllToFeed(alias, request.getTargetUserAlias());
+
         return new FollowResponse(true);
+    }
+
+    @Override
+    public UnfollowResponse unfollow(UnfollowRequest request) {
+        AuthToken token = request.getAuthToken();
+        if (!checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
+        String alias = getUserWToken(token);
+
+        Table table = dynamoDB.getTable(TableName);
+        table.deleteItem("follower_handle", alias, "followee_handle", request.getTargetUserAlias());
+
+        new FeedDynamoDAO().removeAllFromFeed(alias, request.getTargetUserAlias());
+
+        return new UnfollowResponse(true);
+    }
+
+    @Override
+    public IsFollowerResponse isFollower(IsFollowerRequest request) {
+        AuthToken token = request.getAuthToken();
+        if (!checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
+
+        int isFollower;
+        Table table = dynamoDB.getTable(TableName);
+        Item item = table.getItem("follower_handle", request.getFollower(), "followee_handle", request.getFollowee());
+
+        if (item == null) {
+            isFollower = 1;
+        }
+        else {
+            isFollower = 0;
+        }
+        return new IsFollowerResponse(isFollower);
     }
 }

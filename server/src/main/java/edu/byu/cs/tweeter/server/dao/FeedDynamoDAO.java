@@ -3,15 +3,23 @@ package edu.byu.cs.tweeter.server.dao;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Expected;
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
@@ -76,5 +84,44 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
     public FeedResponse getFeed(FeedRequest request) {
         List<Status> posts = getItems(request.getAuthToken(), request.getLast(), request.getTarget(), request.getLimit());
         return new FeedResponse(posts, hasMore);
+    }
+
+    public void removeAllFromFeed(String user, String target) {
+        Table table = dynamoDB.getTable(TableName);
+        QuerySpec query = new QuerySpec().withHashKey(getPK(), user);
+        ItemCollection<QueryOutcome> items = null;
+        Iterator<Item> iterator = null;
+        Item item = null;
+
+        items = table.query(query);
+        iterator = items.iterator();
+        while(iterator.hasNext()) {
+            item = iterator.next();
+            if (item.getString("creator").equals(target)) {
+                table.deleteItem("UserAlias", item.getString("UserAlias"),
+                        "Timestamp", item.getNumber("Timestamp"),
+                        new Expected("creator").eq(target));
+            }
+
+        }
+    }
+
+    public void addAllToFeed(String user, String target) {
+        Table table = dynamoDB.getTable("Story");
+        QuerySpec query = new QuerySpec().withHashKey("UserAlias", target);
+        ItemCollection<QueryOutcome> items = null;
+        Iterator<Item> iterator = null;
+        Item item = null;
+
+        Table fTable = dynamoDB.getTable(TableName);
+        items = table.query(query);
+        iterator = items.iterator();
+        while(iterator.hasNext()) {
+            item = iterator.next();
+            item.withPrimaryKey("UserAlias", user, "TimeStamp", item.getNumber("TimeStamp"));
+            fTable.putItem(item);
+//            Item toAdd = new Item().withPrimaryKey("UserAlias", user, "TimeStamp", item.getNumber("Timestamp"))
+//                    .withList("urls", item.getList("urls"))
+        }
     }
 }
