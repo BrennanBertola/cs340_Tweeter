@@ -20,11 +20,15 @@ import java.util.Map;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
+import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
+import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
 import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
+import edu.byu.cs.tweeter.model.net.response.FolloweeCountResponse;
+import edu.byu.cs.tweeter.model.net.response.FollowerCountResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
@@ -172,5 +176,51 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
             isFollower = 0;
         }
         return new IsFollowerResponse(isFollower);
+    }
+
+    @Override
+    public FollowerCountResponse followerCount(FollowerCountRequest request) {
+        AuthToken token = request.getAuthToken();
+        if (!checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
+
+        Table table = dynamoDB.getTable(TableName);
+        Index index = table.getIndex("follows_index");
+
+        QuerySpec query = new QuerySpec().withHashKey("followee_handle", request.getTargetUserAlias());
+        ItemCollection<QueryOutcome> items = null;
+        items = index.query(query);
+
+        Iterator<Item> it = items.iterator();
+
+        int size = 0;
+        while (it.hasNext()) {
+            it.next();
+            size++;
+        }
+
+        return new FollowerCountResponse(size);
+    }
+
+    @Override
+    public FolloweeCountResponse followeeCount(FolloweeCountRequest request) {
+        AuthToken token = request.getAuthToken();
+        if (!checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
+
+        Table table = dynamoDB.getTable(TableName);
+        QuerySpec query = new QuerySpec().withHashKey("follower_handle", request.getTarget());
+        ItemCollection<QueryOutcome> items = table.query(query);
+        Iterator<Item> it = items.iterator();
+
+        int size = 0;
+        while (it.hasNext()) {
+            it.next();
+            size++;
+        }
+
+        return new FolloweeCountResponse(size);
     }
 }

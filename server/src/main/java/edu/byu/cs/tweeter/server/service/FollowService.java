@@ -97,26 +97,15 @@ public class FollowService {
         if (request.getTargetUserAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a target alias");
         }
-        return getFollowDAO().getFollowerCount(request);
+        FollowsDAO fDAO = factory.getFollowDAO();
+        return fDAO.followerCount(request);
     }
 
     public FolloweeCountResponse getFolloweeCount(FolloweeCountRequest request) {
         if (request.getTarget() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a target alias");
         }
-        return getFollowDAO().getFolloweeCount(request);
-    }
-
-
-
-    /**
-     * Returns an instance of {@link FollowDAO}. Allows mocking of the FollowDAO class
-     * for testing purposes. All usages of FollowDAO should get their FollowDAO
-     * instance from this method to allow for mocking of the instance.
-     *
-     * @return the instance.
-     */
-    FollowDAO getFollowDAO() {
-        return new FollowDAO();
+        FollowsDAO fDAO = factory.getFollowDAO();
+        return fDAO.followeeCount(request);
     }
 }
