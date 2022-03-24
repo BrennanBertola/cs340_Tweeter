@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Expected;
+import com.amazonaws.services.dynamodbv2.document.Index;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
@@ -21,9 +22,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FeedRequest;
+import edu.byu.cs.tweeter.model.net.request.PostStatusRequest;
 import edu.byu.cs.tweeter.model.net.response.FeedResponse;
 
 public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
@@ -86,6 +89,38 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
         return new FeedResponse(posts, hasMore);
     }
 
+    @Override
+    public boolean post(PostStatusRequest request) {
+        AuthToken token = request.getAuthToken();
+        if (!checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
+        Status post = request.getStatus();
+        long timeMil = new Date().getTime();
+
+
+        Table table = dynamoDB.getTable("follows");
+        Index index = table.getIndex("follows_index");
+        QuerySpec query = new QuerySpec().withHashKey("followee_handle", post.getUser().getAlias());
+        ItemCollection<QueryOutcome> items = index.query(query);
+        Iterator<Item> it = items.iterator();
+        Item feedToAdd;
+
+        table = dynamoDB.getTable(TableName);
+        while (it.hasNext()) {
+            feedToAdd = it.next();
+            String alias = feedToAdd.getString("follower_handle");
+            Item item = new Item().withPrimaryKey("UserAlias", alias, "Timestamp", timeMil)
+                    .withString("post", post.getPost())
+                    .withString("creator", post.getUser().getAlias())
+                    .withList("urls", post.getUrls())
+                    .withList("mentions", post.getMentions());
+            table.putItem(item);
+        }
+
+        return true;
+    }
+
     public void removeAllFromFeed(String user, String target) {
         Table table = dynamoDB.getTable(TableName);
         QuerySpec query = new QuerySpec().withHashKey(getPK(), user);
@@ -120,8 +155,6 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
             item = iterator.next();
             item.withPrimaryKey("UserAlias", user, "TimeStamp", item.getNumber("TimeStamp"));
             fTable.putItem(item);
-//            Item toAdd = new Item().withPrimaryKey("UserAlias", user, "TimeStamp", item.getNumber("Timestamp"))
-//                    .withList("urls", item.getList("urls"))
         }
     }
 }

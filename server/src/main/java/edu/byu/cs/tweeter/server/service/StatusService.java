@@ -7,7 +7,6 @@ import edu.byu.cs.tweeter.model.net.response.FeedResponse;
 import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
 import edu.byu.cs.tweeter.model.net.response.StoryResponse;
 import edu.byu.cs.tweeter.server.dao.FeedDAO;
-import edu.byu.cs.tweeter.server.dao.StatusDAO;
 import edu.byu.cs.tweeter.server.dao.StoryDAO;
 import edu.byu.cs.tweeter.server.factory.DAOFactory;
 
@@ -43,8 +42,11 @@ public class StatusService {
         else if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
         }
-        return getStatusDAO().postStatus(request);
+        StoryDAO sDAO = factory.getStoryDAO();
+        FeedDAO fDAO = factory.getFeedDAO();
+        if (sDAO.post(request) && fDAO.post(request)) {
+            return new PostStatusResponse(true);
+        }
+        return new PostStatusResponse(false);
     }
-
-    private StatusDAO getStatusDAO() {return new StatusDAO();}
 }

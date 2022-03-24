@@ -11,4 +11,5 @@ public interface UserDAO extends DAO {
     User register(RegisterRequest request);
     UserResponse getUser(UserRequest request);
 
+
 }
