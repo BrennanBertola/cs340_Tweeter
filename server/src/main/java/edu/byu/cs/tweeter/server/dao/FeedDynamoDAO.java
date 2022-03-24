@@ -39,6 +39,11 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
     }
 
     @Override
+    boolean getOrder() {
+        return false;
+    }
+
+    @Override
     Object make(Item item) {
         User user = getUser(item.getString("creator"));
         Date date = new Date(item.getNumber("Timestamp").longValue());

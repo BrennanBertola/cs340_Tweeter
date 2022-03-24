@@ -22,6 +22,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 
@@ -55,6 +56,11 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
     }
 
     @Override
+    boolean getOrder() {
+        return true;
+    }
+
+    @Override
     public FollowingResponse getFollowing(FollowingRequest request) {
         List<User> users = getItems(request.getAuthToken(), request.getLast(), request.getTarget(), request.getLimit());
         return new FollowingResponse(users, hasMore);
@@ -67,7 +73,7 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
         String target = request.getTarget();
         int pageSize = request.getLimit();
 
-        if (!checkAuthToken(token, target)) {
+        if (!checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
 
@@ -109,5 +115,20 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
 
 
         return new FollowerResponse(users, hasMore);
+    }
+
+    @Override
+    public FollowResponse follow(FollowRequest request) {
+        AuthToken token = request.getAuthToken();
+        if (!checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
+        String alias = getUserWToken(token);
+
+        Table table = dynamoDB.getTable(TableName);
+        Item item = new Item().withPrimaryKey(getPK(), alias, "followee_handle", request.getTargetUserAlias());
+        table.putItem(item);
+
+        return new FollowResponse(true);
     }
 }

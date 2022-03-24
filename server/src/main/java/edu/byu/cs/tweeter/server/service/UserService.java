@@ -44,7 +44,6 @@ public class UserService {
         AuthTokenDAO aDAO = factory.getAuthTokenDAO();
         aDAO.deleteToken(request.getAuthToken());
         return new LogoutResponse(true);
-
     }
 
     public RegisterResponse register(RegisterRequest request) {
@@ -75,38 +74,7 @@ public class UserService {
         if (request.getTargetUserAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a target alias");
         }
-        return new UserResponse(getDummyUser(request.getTargetUserAlias()));
-    }
-    /**
-     * Returns the dummy user to be returned by the login operation.
-     * This is written as a separate method to allow mocking of the dummy user.
-     *
-     * @return a dummy user.
-     */
-    User getDummyLogin() {
-        return getFakeData().getFirstUser();
-    }
-    User getDummyRegister() {
-        return getFakeData().getFirstUser();
-    }
-    User getDummyUser(String alias) {return getFakeData().findUserByAlias(alias);}
-    /**
-     * Returns the dummy auth token to be returned by the login operation.
-     * This is written as a separate method to allow mocking of the dummy auth token.
-     *
-     * @return a dummy auth token.
-     */
-    AuthToken getDummyAuthToken() {
-        return getFakeData().getAuthToken();
-    }
-
-    /**
-     * Returns the {@link FakeData} object used to generate dummy users and auth tokens.
-     * This is written as a separate method to allow mocking of the {@link FakeData}.
-     *
-     * @return a {@link FakeData} instance.
-     */
-    FakeData getFakeData() {
-        return new FakeData();
+        UserDAO uDAO = factory.getUserDAO();
+        return uDAO.getUser(request);
     }
 }

@@ -46,7 +46,6 @@ public class AuthTokenDynamoDAO extends DynamoDAO implements AuthTokenDAO{
 
     @Override
     public void deleteToken(AuthToken token) {
-        Table table = dynamoDB.getTable(TableName);
-        table.deleteItem("AuthToken", token.getToken());
+        deleteTokens(token);
     }
 }

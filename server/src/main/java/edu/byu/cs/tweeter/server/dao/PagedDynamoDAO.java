@@ -33,12 +33,12 @@ public abstract class PagedDynamoDAO<T> extends DynamoDAO {
 
     public List<T> getItems(AuthToken token, String last, String target, int pageSize) {
 
-        if (!checkAuthToken(token, target)) {
+        if (!checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
 
         QuerySpec querySpec = new QuerySpec()
-                .withScanIndexForward(true)
+                .withScanIndexForward(getOrder())
                 .withHashKey(getPK(), target)
                 .withMaxResultSize(pageSize);
 
@@ -97,4 +97,5 @@ public abstract class PagedDynamoDAO<T> extends DynamoDAO {
     abstract PrimaryKey getLast(String last, String target);
     abstract String getTable();
     abstract String getPK();
+    abstract boolean getOrder();
 }

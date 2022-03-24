@@ -73,5 +73,10 @@ public class StoryDynamoDAO extends PagedDynamoDAO implements StoryDAO {
         return "UserAlias";
     }
 
+    @Override
+    boolean getOrder() {
+        return false;
+    }
+
 
 }

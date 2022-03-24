@@ -7,17 +7,24 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.spec.KeySpec;
+import java.util.Base64;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
+import edu.byu.cs.tweeter.model.net.request.UserRequest;
+import edu.byu.cs.tweeter.model.net.response.UserResponse;
 
 public class UserDynamoDAO extends DynamoDAO implements UserDAO {
     private static AmazonS3 s3 = AmazonS3ClientBuilder
@@ -79,13 +86,20 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
             throw new RuntimeException("[InternalServerError] user already exists");
         }
 
-//        byte[] bytes = Base64.getDecoder().decode(request.getImage());
-//
-//        String bucketName = "brennan-tweeter-images";
-//        s3.putObject(bucketName, request.getUsername(), String.valueOf(bytes));
-//        String imageUrl = s3.getUrl(bucketName, request.getUsername()).toExternalForm();
+        byte[] image = Base64.getDecoder().decode(request.getImage());
+        ByteArrayInputStream bIStream = new ByteArrayInputStream(image);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType("image/png");
+        String bucketName = "brennan-tweeter-images";
+        String key = request.getUsername() + "_avatar.png";
+        PutObjectRequest put = new PutObjectRequest(bucketName, key, bIStream, metadata);
 
-        String defaultURL = "https://brennan-tweeter-images.s3.us-west-2.amazonaws.com/sadge.jpg";
+        s3.putObject(put);
+        String imageUrl = s3.getUrl(bucketName, key).toExternalForm();
+
+        if (imageUrl == null || imageUrl == "") {
+            imageUrl = "https://brennan-tweeter-images.s3.us-west-2.amazonaws.com/sadge.jpg";
+        }
 
 
         String hashedPass;
@@ -106,15 +120,32 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
                 .withString("password", hashedPass)
                 .withString("firstName", request.getFirstName())
                 .withString("lastName", request.getLastName())
-                .withString("imageUrl", defaultURL);
+                .withString("imageUrl", imageUrl);
 
         table.putItem(item);
 
         String first = request.getFirstName();
         String last = request.getLastName();
         String alias = request.getUsername();
-        User user = new User(first, last, alias, defaultURL);
+        User user = new User(first, last, alias, imageUrl);
         return user;
+    }
+
+    @Override
+    public UserResponse getUser(UserRequest request) {
+        AuthToken token = request.getAuthToken();
+        checkAuthToken(token);
+
+        Table table = dynamoDB.getTable(TableName);
+        Item item = table.getItem("UserAlias", request.getTargetUserAlias());
+
+        String first = item.getString("firstName");
+        String last = item.getString("lastName");
+        String alias = item.getString("UserAlias");
+        String img = item.getString("imageUrl");
+        User user = new User(first, last, alias, img);
+
+        return new UserResponse(user);
     }
 
 
