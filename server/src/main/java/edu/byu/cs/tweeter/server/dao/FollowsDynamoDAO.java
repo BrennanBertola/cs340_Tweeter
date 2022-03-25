@@ -80,8 +80,9 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
         String last = request.getLast();
         String target = request.getTarget();
         int pageSize = request.getLimit();
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
 
-        if (!checkAuthToken(token)) {
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
 
@@ -98,7 +99,7 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
         Iterator<Item> iterator = null;
         Item item = null;
 
-        Table table = dynamoDB.getTable("follows");
+        Table table = dynamoDB.getTable(TableName);
         Index index = table.getIndex("follows_index");
 
         items = index.query(querySpec);
@@ -128,10 +129,13 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
     @Override
     public FollowResponse follow(FollowRequest request) {
         AuthToken token = request.getAuthToken();
-        if (!checkAuthToken(token)) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
-        String alias = getUserWToken(token);
+
+        String alias = aDAO.getUserWToken(token);
 
         Table table = dynamoDB.getTable(TableName);
         Item item = new Item().withPrimaryKey(getPK(), alias, "followee_handle", request.getTargetUserAlias());
@@ -145,10 +149,12 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
     @Override
     public UnfollowResponse unfollow(UnfollowRequest request) {
         AuthToken token = request.getAuthToken();
-        if (!checkAuthToken(token)) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
-        String alias = getUserWToken(token);
+        String alias = aDAO.getUserWToken(token);
 
         Table table = dynamoDB.getTable(TableName);
         table.deleteItem("follower_handle", alias, "followee_handle", request.getTargetUserAlias());
@@ -161,7 +167,9 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
     @Override
     public IsFollowerResponse isFollower(IsFollowerRequest request) {
         AuthToken token = request.getAuthToken();
-        if (!checkAuthToken(token)) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
 
@@ -181,7 +189,9 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
     @Override
     public FollowerCountResponse followerCount(FollowerCountRequest request) {
         AuthToken token = request.getAuthToken();
-        if (!checkAuthToken(token)) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
 
@@ -206,7 +216,9 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
     @Override
     public FolloweeCountResponse followeeCount(FolloweeCountRequest request) {
         AuthToken token = request.getAuthToken();
-        if (!checkAuthToken(token)) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
 
@@ -222,5 +234,12 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
         }
 
         return new FolloweeCountResponse(size);
+    }
+
+    public ItemCollection<QueryOutcome> getFollowers(String target) {
+        Table table = dynamoDB.getTable(TableName);
+        Index index = table.getIndex("follows_index");
+        QuerySpec query = new QuerySpec().withHashKey("followee_handle", target);
+        return index.query(query);
     }
 }

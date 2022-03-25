@@ -27,15 +27,6 @@ public class FollowService {
         this.factory = factory;
     }
 
-    /**
-     * Returns the users that the user specified in the request is following. Uses information in
-     * the request object to limit the number of followees returned and to return the next set of
-     * followees after any that were returned in a previous request. Uses the {@link FollowDAO} to
-     * get the followees.
-     *
-     * @param request contains the data required to fulfill the request.
-     * @return the followees.
-     */
     public FollowingResponse getFollowees(FollowingRequest request) {
         if(request.getTarget() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a follower alias");

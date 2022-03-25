@@ -26,7 +26,7 @@ import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
 import edu.byu.cs.tweeter.model.net.request.UserRequest;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
 
-public class UserDynamoDAO extends DynamoDAO implements UserDAO {
+public class UserDynamoDAO implements UserDAO {
     private static AmazonS3 s3 = AmazonS3ClientBuilder
             .standard()
             .withRegion("us-west-2")
@@ -134,7 +134,11 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
     @Override
     public UserResponse getUser(UserRequest request) {
         AuthToken token = request.getAuthToken();
-        checkAuthToken(token);
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
 
         Table table = dynamoDB.getTable(TableName);
         Item item = table.getItem("UserAlias", request.getTargetUserAlias());
@@ -147,6 +151,8 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
 
         return new UserResponse(user);
     }
+
+
 
 
 }

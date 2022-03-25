@@ -57,28 +57,20 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
     @Override
     Object make(Item item) {
         User user = getUser(item.getString("creator"));
-        Date date = new Date(item.getNumber("Timestamp").longValue());
-        DateFormat df = new SimpleDateFormat("MMM dd yyyy, HH:mm");
-        String dateString = df.format(date);
+        long dbTimestamp = item.getNumber("Timestamp").longValue();
+        Date date = new Date(dbTimestamp);
         String post = item.getString("post");
         List<String> urls = item.getList("urls");
         List<String> mentions = item.getList("mentions");
-
-        Status status = new Status(post, user, dateString, urls, mentions);
+        Status status = new Status(post, user, date.toString(), urls, mentions);
+        status.timestamp = dbTimestamp;
 
         return status;
     }
 
     @Override
     PrimaryKey getLast(String last, String target) {
-        Date date;
-        try {
-            date = new SimpleDateFormat("MMM dd yyyy, HH:mm").parse(last);
-        }catch (Exception ex) {
-            throw new RuntimeException("[InternalServerError] could not parse date");
-        }
-
-        long lastLong = date.getTime();
+        long lastLong = Long.parseLong(last);
         PrimaryKey lastKey = new PrimaryKey("UserAlias", target, "Timestamp", lastLong);
         return lastKey;
     }
@@ -92,21 +84,21 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
     @Override
     public boolean post(PostStatusRequest request) {
         AuthToken token = request.getAuthToken();
-        if (!checkAuthToken(token)) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
         Status post = request.getStatus();
         long timeMil = new Date().getTime();
 
 
-        Table table = dynamoDB.getTable("follows");
-        Index index = table.getIndex("follows_index");
-        QuerySpec query = new QuerySpec().withHashKey("followee_handle", post.getUser().getAlias());
-        ItemCollection<QueryOutcome> items = index.query(query);
+        FollowsDynamoDAO fDAO = new FollowsDynamoDAO();
+        ItemCollection<QueryOutcome> items = fDAO.getFollowers(post.getUser().getAlias());
         Iterator<Item> it = items.iterator();
         Item feedToAdd;
 
-        table = dynamoDB.getTable(TableName);
+        Table table = dynamoDB.getTable(TableName);
         while (it.hasNext()) {
             feedToAdd = it.next();
             String alias = feedToAdd.getString("follower_handle");
@@ -142,19 +134,17 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
     }
 
     public void addAllToFeed(String user, String target) {
-        Table table = dynamoDB.getTable("Story");
-        QuerySpec query = new QuerySpec().withHashKey("UserAlias", target);
-        ItemCollection<QueryOutcome> items = null;
+        StoryDynamoDAO sDAO = new StoryDynamoDAO();
+        ItemCollection<QueryOutcome> items = sDAO.getStory(target);
         Iterator<Item> iterator = null;
         Item item = null;
 
-        Table fTable = dynamoDB.getTable(TableName);
-        items = table.query(query);
+        Table table = dynamoDB.getTable(TableName);
         iterator = items.iterator();
         while(iterator.hasNext()) {
             item = iterator.next();
             item.withPrimaryKey("UserAlias", user, "TimeStamp", item.getNumber("TimeStamp"));
-            fTable.putItem(item);
+            table.putItem(item);
         }
     }
 }

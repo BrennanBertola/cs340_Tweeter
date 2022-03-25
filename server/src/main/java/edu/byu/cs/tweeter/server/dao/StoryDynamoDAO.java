@@ -4,8 +4,11 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
@@ -42,10 +45,13 @@ public class StoryDynamoDAO extends PagedDynamoDAO implements StoryDAO {
     @Override
     public boolean post(PostStatusRequest request) {
         AuthToken token = request.getAuthToken();
-        if (!checkAuthToken(token)) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
-        String user = getUserWToken(request.getAuthToken());
+
+        String user = aDAO.getUserWToken(request.getAuthToken());
         Status post = request.getStatus();
         Date date = new Date();
 
@@ -64,28 +70,20 @@ public class StoryDynamoDAO extends PagedDynamoDAO implements StoryDAO {
     @Override
     Object make(Item item) {
         User user = getUser(item.getString("creator"));
-        Date date = new Date(item.getNumber("Timestamp").longValue());
-        DateFormat df = new SimpleDateFormat("MMM dd yyyy, HH:mm");
-        String dateString = df.format(date) + " GMT";
+        long dbTimestamp = item.getNumber("Timestamp").longValue();
+        Date date = new Date(dbTimestamp);
         String post = item.getString("post");
         List<String> urls = item.getList("urls");
         List<String> mentions = item.getList("mentions");
-
-        Status status = new Status(post, user, dateString, urls, mentions);
+        Status status = new Status(post, user, date.toString(), urls, mentions);
+        status.timestamp = dbTimestamp;
 
         return status;
     }
 
     @Override
     PrimaryKey getLast(String last, String target) {
-        Date date;
-        try {
-            date = new SimpleDateFormat("MMM dd yyyy, HH:mm").parse(last);
-        }catch (Exception ex) {
-            throw new RuntimeException("[InternalServerError] could not parse date");
-        }
-
-        long lastLong = date.getTime();
+        long lastLong = Long.parseLong(last);
         PrimaryKey lastKey = new PrimaryKey("UserAlias", target, "Timestamp", lastLong);
         return lastKey;
     }
@@ -101,6 +99,12 @@ public class StoryDynamoDAO extends PagedDynamoDAO implements StoryDAO {
     @Override
     boolean getOrder() {
         return false;
+    }
+
+    public ItemCollection<QueryOutcome> getStory(String target) {
+        Table table = dynamoDB.getTable(TableName);
+        QuerySpec query = new QuerySpec().withHashKey("UserAlias", target);
+        return table.query(query);
     }
 
 

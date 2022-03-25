@@ -35,7 +35,7 @@ public class GetStoryTask extends PagedStatusTask {
     protected final void runTask() {
         try {
             String targetUserAlias = targetUser == null ? null : targetUser.getAlias();
-            String lastStatus = lastItem == null ? null : lastItem.getDate();
+            String lastStatus = lastItem == null ? null : String.valueOf(lastItem.timestamp);
 
             StoryRequest request = new StoryRequest(authToken, targetUserAlias, limit, lastStatus);
             StoryResponse response = getServerFacade().getStory(request, URL_PATH);

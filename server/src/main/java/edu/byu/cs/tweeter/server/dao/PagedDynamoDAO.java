@@ -23,7 +23,7 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public abstract class PagedDynamoDAO<T> extends DynamoDAO {
+public abstract class PagedDynamoDAO<T> {
     private static AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder
             .standard()
             .withRegion("us-west-2")
@@ -32,8 +32,9 @@ public abstract class PagedDynamoDAO<T> extends DynamoDAO {
     boolean hasMore;
 
     public List<T> getItems(AuthToken token, String last, String target, int pageSize) {
+        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
 
-        if (!checkAuthToken(token)) {
+        if (! aDAO.checkAuthToken(token)) {
             throw new RuntimeException("[InternalServerError] invalid authtoken");
         }
 
@@ -56,9 +57,9 @@ public abstract class PagedDynamoDAO<T> extends DynamoDAO {
 
         List<T> obj = new ArrayList<>(pageSize);
 
-        if (last != null) {
-            iterator.next();
-        }
+//        if (last != null && iterator.hasNext()) {
+//            iterator.next();
+//        }
         while (iterator.hasNext()) {
             item = iterator.next();
             obj.add(make(item));

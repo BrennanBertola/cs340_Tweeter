@@ -29,6 +29,8 @@ public class Status implements Serializable {
      */
     public List<String> mentions;
 
+    public long timestamp;
+
     public Status() {
     }
 
