@@ -55,6 +55,7 @@ public class AuthTokenDynamoDAO implements AuthTokenDAO{
         deleteTokens(token);
     }
 
+    @Override
     public boolean checkAuthToken(AuthToken token) {
         Table table = dynamoDB.getTable(TableName);
         Item item = table.getItem("AuthToken", token.getToken());
@@ -78,21 +79,6 @@ public class AuthTokenDynamoDAO implements AuthTokenDAO{
 
     public void deleteTokens(AuthToken token) { //r
         Table table = dynamoDB.getTable(TableName);
-        ItemCollection<ScanOutcome> items = null;
-        Iterator<Item> iterator = null;
-        Item item = null;
-        Date date = new Date();
-
-        items = table.scan();
-        iterator = items.iterator();
-
-        while (iterator.hasNext()) {
-            item = iterator.next();
-            if ((date.getTime() - item.getLong("timestamp")) > timeToExpire) {
-                table.deleteItem("AuthToken", item.getString("AuthToken"));
-            }
-        }
-
         table.deleteItem("AuthToken", token.getToken());
     }
 

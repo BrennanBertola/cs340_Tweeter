@@ -14,6 +14,11 @@ import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -40,6 +45,7 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
             .build();
     private static DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
     private static final String TableName = "Feed";
+    private static final String SQS = "https://sqs.us-west-2.amazonaws.com/287264978271/Tweeter";
 
     @Override
     public String getTable() {return TableName;}
@@ -83,32 +89,41 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
 
     @Override
     public boolean post(PostStatusRequest request) {
-        AuthToken token = request.getAuthToken();
-        AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
 
-        if (! aDAO.checkAuthToken(token)) {
-            throw new RuntimeException("[InternalServerError] invalid authtoken");
-        }
         Status post = request.getStatus();
         long timeMil = new Date().getTime();
+        post.timestamp = timeMil;
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .create();
+        String json = gson.toJson(post);
 
+        SendMessageRequest send = new SendMessageRequest()
+                .withQueueUrl(SQS)
+                .withMessageBody(json);
+        AmazonSQS sqs = AmazonSQSClientBuilder.defaultClient();
+        sqs.sendMessage(send);
 
-        FollowsDynamoDAO fDAO = new FollowsDynamoDAO();
-        ItemCollection<QueryOutcome> items = fDAO.getFollowers(post.getUser().getAlias());
-        Iterator<Item> it = items.iterator();
-        Item feedToAdd;
-
-        Table table = dynamoDB.getTable(TableName);
-        while (it.hasNext()) {
-            feedToAdd = it.next();
-            String alias = feedToAdd.getString("follower_handle");
-            Item item = new Item().withPrimaryKey("UserAlias", alias, "Timestamp", timeMil)
-                    .withString("post", post.getPost())
-                    .withString("creator", post.getUser().getAlias())
-                    .withList("urls", post.getUrls())
-                    .withList("mentions", post.getMentions());
-            table.putItem(item);
-        }
+//
+//        long timeMil = new Date().getTime();
+//
+//
+//        FollowsDynamoDAO fDAO = new FollowsDynamoDAO();
+//        ItemCollection<QueryOutcome> items = fDAO.getFollowers(post.getUser().getAlias());
+//        Iterator<Item> it = items.iterator();
+//        Item feedToAdd;
+//
+//        Table table = dynamoDB.getTable(TableName);
+//        while (it.hasNext()) {
+//            feedToAdd = it.next();
+//            String alias = feedToAdd.getString("follower_handle");
+//            Item item = new Item().withPrimaryKey("UserAlias", alias, "Timestamp", timeMil)
+//                    .withString("post", post.getPost())
+//                    .withString("creator", post.getUser().getAlias())
+//                    .withList("urls", post.getUrls())
+//                    .withList("mentions", post.getMentions());
+//            table.putItem(item);
+//        }
 
         return true;
     }

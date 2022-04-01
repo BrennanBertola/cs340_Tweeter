@@ -2,9 +2,14 @@ package edu.byu.cs.tweeter.server.dao;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.document.AttributeUpdate;
+import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -15,14 +20,18 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.spec.KeySpec;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
+import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
+import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
 import edu.byu.cs.tweeter.model.net.request.UserRequest;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
 
@@ -120,7 +129,9 @@ public class UserDynamoDAO implements UserDAO {
                 .withString("password", hashedPass)
                 .withString("firstName", request.getFirstName())
                 .withString("lastName", request.getLastName())
-                .withString("imageUrl", imageUrl);
+                .withString("imageUrl", imageUrl)
+                .withInt("followerCount", 0)
+                .withInt("followingCount", 0);
 
         table.putItem(item);
 
@@ -152,7 +163,91 @@ public class UserDynamoDAO implements UserDAO {
         return new UserResponse(user);
     }
 
+    @Override
+    public void addUserBatch(List<User> users) {
 
+        // Constructor for TableWriteItems takes the name of the table, which I have stored in TABLE_USER
+        TableWriteItems items = new TableWriteItems(TableName);
 
+        // Add each user into the TableWriteItems object
+        for (User user : users) {
+            Item item = new Item()
+                    .withPrimaryKey("UserAlias", user.getAlias())
+                    .withString("firstName", user.getFirstName())
+                    .withString("lastName", user.getLastName())
+                    .withString("imageUrl", user.getImageUrl())
+                    .withInt("followerCount", 0)
+                    .withInt("followingCount", 1);
+            items.addItemToPut(item);
+
+            // 25 is the maximum number of items allowed in a single batch write.
+            // Attempting to write more than 25 items will result in an exception being thrown
+            if (items.getItemsToPut() != null && items.getItemsToPut().size() == 25) {
+                loopBatchWrite(items);
+                items = new TableWriteItems(TableName);
+            }
+        }
+
+        // Write any leftover items
+        if (items.getItemsToPut() != null && items.getItemsToPut().size() > 0) {
+            loopBatchWrite(items);
+        }
+    }
+
+    @Override
+    public int getFollowerCount(String target) {
+        Table table = dynamoDB.getTable(TableName);
+        Item item = table.getItem("UserAlias", target);
+        return item.getInt("followerCount");
+    }
+
+    @Override
+    public int getFollowingCount(String target) {
+        Table table = dynamoDB.getTable(TableName);
+        Item item = table.getItem("UserAlias", target);
+        return item.getInt("followingCount");
+    }
+
+    @Override
+    public void addFollowCount(FollowRequest request) {
+        Table table = dynamoDB.getTable(TableName);
+        String followed = request.getTargetUserAlias();
+        String following = new AuthTokenDynamoDAO().getUserWToken(request.getAuthToken());
+        UpdateItemSpec add = new UpdateItemSpec().withPrimaryKey("UserAlias", followed)
+                .withAttributeUpdate(new AttributeUpdate("followerCount").addNumeric(1));
+        table.updateItem(add);
+
+        add = new UpdateItemSpec().withPrimaryKey("UserAlias", following)
+                .withAttributeUpdate(new AttributeUpdate("followingCount").addNumeric(1));
+        table.updateItem(add);
+
+    }
+
+    @Override
+    public void subFollowCount(UnfollowRequest request) {
+        Table table = dynamoDB.getTable(TableName);
+        String followed = request.getTargetUserAlias();
+        String following = new AuthTokenDynamoDAO().getUserWToken(request.getAuthToken());
+        UpdateItemSpec add = new UpdateItemSpec().withPrimaryKey("UserAlias", followed)
+                .withAttributeUpdate(new AttributeUpdate("followerCount").addNumeric(-1));
+        table.updateItem(add);
+
+        add = new UpdateItemSpec().withPrimaryKey("UserAlias", following)
+                .withAttributeUpdate(new AttributeUpdate("followingCount").addNumeric(-1));
+        table.updateItem(add);
+    }
+
+    private void loopBatchWrite(TableWriteItems items) {
+
+        // The 'dynamoDB' object is of type DynamoDB and is declared statically in this example
+        BatchWriteItemOutcome outcome = dynamoDB.batchWriteItem(items);
+
+        // Check the outcome for items that didn't make it onto the table
+        // If any were not added to the table, try again to write the batch
+        while (outcome.getUnprocessedItems().size() > 0) {
+            Map<String, List<WriteRequest>> unprocessedItems = outcome.getUnprocessedItems();
+            outcome = dynamoDB.batchWriteItemUnprocessed(unprocessedItems);
+        }
+    }
 
 }

@@ -1,11 +1,15 @@
 package edu.byu.cs.tweeter.server.service;
 
+import edu.byu.cs.tweeter.model.domain.AuthToken;
+import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.net.request.FeedRequest;
 import edu.byu.cs.tweeter.model.net.request.PostStatusRequest;
 import edu.byu.cs.tweeter.model.net.request.StoryRequest;
 import edu.byu.cs.tweeter.model.net.response.FeedResponse;
 import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
 import edu.byu.cs.tweeter.model.net.response.StoryResponse;
+import edu.byu.cs.tweeter.server.dao.AuthTokenDAO;
+import edu.byu.cs.tweeter.server.dao.AuthTokenDynamoDAO;
 import edu.byu.cs.tweeter.server.dao.FeedDAO;
 import edu.byu.cs.tweeter.server.dao.StoryDAO;
 import edu.byu.cs.tweeter.server.factory.DAOFactory;
@@ -42,6 +46,13 @@ public class StatusService {
         else if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
         }
+
+        AuthToken token = request.getAuthToken();
+        AuthTokenDAO aDAO = factory.getAuthTokenDAO();
+
+        if (! aDAO.checkAuthToken(token)) {
+            throw new RuntimeException("[InternalServerError] invalid authtoken");
+        }
         StoryDAO sDAO = factory.getStoryDAO();
         FeedDAO fDAO = factory.getFeedDAO();
         if (sDAO.post(request) && fDAO.post(request)) {
@@ -49,4 +60,6 @@ public class StatusService {
         }
         return new PostStatusResponse(false);
     }
+
+
 }

@@ -1,5 +1,6 @@
 package edu.byu.cs.tweeter.server.service;
 
+import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowerCountRequest;
@@ -15,6 +16,7 @@ import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowsDAO;
+import edu.byu.cs.tweeter.server.dao.UserDAO;
 import edu.byu.cs.tweeter.server.factory.DAOFactory;
 
 /**
@@ -55,6 +57,8 @@ public class FollowService {
         }
 
         FollowsDAO fDAO = factory.getFollowDAO();
+        UserDAO uDAO = factory.getUserDAO();
+        uDAO.addFollowCount(request);
         return fDAO.follow(request);
     }
 
@@ -66,6 +70,8 @@ public class FollowService {
         }
 
         FollowsDAO fDAO = factory.getFollowDAO();
+        UserDAO uDAO = factory.getUserDAO();
+        uDAO.subFollowCount(request);
         return fDAO.unfollow(request);
     }
 
@@ -80,6 +86,7 @@ public class FollowService {
         }
 
         FollowsDAO fDAO = factory.getFollowDAO();
+
         return fDAO.isFollower(request);
     }
 
@@ -87,15 +94,22 @@ public class FollowService {
         if (request.getTargetUserAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a target alias");
         }
-        FollowsDAO fDAO = factory.getFollowDAO();
-        return fDAO.followerCount(request);
+        UserDAO uDAO = factory.getUserDAO();
+        FollowerCountResponse response = new FollowerCountResponse(uDAO.getFollowerCount(request.getTargetUserAlias()));
+        return response;
     }
 
     public FolloweeCountResponse getFolloweeCount(FolloweeCountRequest request) {
         if (request.getTarget() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a target alias");
         }
+        UserDAO uDAO = factory.getUserDAO();
+        FolloweeCountResponse response = new FolloweeCountResponse(uDAO.getFollowingCount(request.getTarget()));
+        return response;
+    }
+
+    public void postUpdateFeedMessages(Status post) {
         FollowsDAO fDAO = factory.getFollowDAO();
-        return fDAO.followeeCount(request);
+        fDAO.postUpdateFeedMessages(post);
     }
 }

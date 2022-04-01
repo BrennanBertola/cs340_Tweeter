@@ -47,10 +47,6 @@ public class StoryDynamoDAO extends PagedDynamoDAO implements StoryDAO {
         AuthToken token = request.getAuthToken();
         AuthTokenDynamoDAO aDAO = new AuthTokenDynamoDAO();
 
-        if (! aDAO.checkAuthToken(token)) {
-            throw new RuntimeException("[InternalServerError] invalid authtoken");
-        }
-
         String user = aDAO.getUserWToken(request.getAuthToken());
         Status post = request.getStatus();
         Date date = new Date();

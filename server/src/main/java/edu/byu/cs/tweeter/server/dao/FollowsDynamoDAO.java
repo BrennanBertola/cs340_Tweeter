@@ -2,6 +2,7 @@ package edu.byu.cs.tweeter.server.dao;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Index;
 import com.amazonaws.services.dynamodbv2.document.Item;
@@ -9,8 +10,16 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.Get;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
+import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.FolloweeCountRequest;
@@ -33,6 +43,7 @@ import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
+import edu.byu.cs.tweeter.server.SQS.FeedMessage;
 
 public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO {
     private static AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder
@@ -92,7 +103,7 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
                 .withMaxResultSize(pageSize);
 
         if (last != null) {
-            querySpec.withExclusiveStartKey(getLast(last, target));
+            querySpec.withExclusiveStartKey(new PrimaryKey("followee_handle", target, "follower_handle", last));
         }
 
         ItemCollection<QueryOutcome> items = null;
@@ -107,9 +118,7 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
 
         List<User> users = new ArrayList<>(pageSize);
 
-        if (last != null) {
-            iterator.next();
-        }
+
         while (iterator.hasNext()) {
             item = iterator.next();
             users.add(getUser(item.getString("follower_handle")));
@@ -234,6 +243,74 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
         }
 
         return new FolloweeCountResponse(size);
+    }
+
+    @Override
+    public void addFollowersBatch(List<String> followers, String target) {
+        TableWriteItems items = new TableWriteItems(TableName);
+
+        for (String follower : followers) {
+            Item item = new Item()
+                    .withPrimaryKey("follower_handle", follower, "followee_handle", target);
+            items.addItemToPut(item);
+
+            if (items.getItemsToPut() != null && items.getItemsToPut().size() == 25) {
+                loopBatchWrite(items);
+                items = new TableWriteItems(TableName);
+            }
+        }
+
+        if (items.getItemsToPut() != null && items.getItemsToPut().size() > 0) {
+            loopBatchWrite(items);
+        }
+    }
+
+    @Override
+    public void postUpdateFeedMessages(Status post) {
+        final String sqsUrl = "https://sqs.us-west-2.amazonaws.com/287264978271/FeedUpdate";
+        final int batchSize = 25;
+        String creator = post.getUser().getAlias();
+        Table table = dynamoDB.getTable(TableName);
+        Index index = table.getIndex("follows_index");
+        QuerySpec query = new QuerySpec()
+                .withScanIndexForward(true)
+                .withHashKey("followee_handle", creator)
+                .withMaxResultSize(batchSize);
+
+        ArrayList<String> toUpdate = new ArrayList<>();
+        ItemCollection<QueryOutcome> items = index.query(query);
+        Iterator<Item> it = items.iterator();
+
+        while (it.hasNext()) {
+            Item curr = it.next();
+            toUpdate.add(curr.getString("follower_handle"));
+        }
+
+        FeedMessage msg = new FeedMessage(toUpdate, post);
+        Gson gson = new GsonBuilder().create();
+        String json = gson.toJson(msg);
+
+        SendMessageRequest send = new SendMessageRequest()
+                .withQueueUrl(sqsUrl)
+                .withMessageBody(json);
+        AmazonSQS sqs = AmazonSQSClientBuilder.defaultClient();
+        sqs.sendMessage(send);
+
+        toUpdate.clear();
+    }
+
+
+    private void loopBatchWrite(TableWriteItems items) {
+
+        // The 'dynamoDB' object is of type DynamoDB and is declared statically in this example
+        BatchWriteItemOutcome outcome = dynamoDB.batchWriteItem(items);
+
+        // Check the outcome for items that didn't make it onto the table
+        // If any were not added to the table, try again to write the batch
+        while (outcome.getUnprocessedItems().size() > 0) {
+            Map<String, List<WriteRequest>> unprocessedItems = outcome.getUnprocessedItems();
+            outcome = dynamoDB.batchWriteItemUnprocessed(unprocessedItems);
+        }
     }
 
     public ItemCollection<QueryOutcome> getFollowers(String target) {
