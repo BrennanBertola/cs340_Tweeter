@@ -10,6 +10,7 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.s3.AmazonS3;
@@ -22,6 +23,8 @@ import com.google.gson.GsonBuilder;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +36,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FeedRequest;
 import edu.byu.cs.tweeter.model.net.request.PostStatusRequest;
 import edu.byu.cs.tweeter.model.net.response.FeedResponse;
+import edu.byu.cs.tweeter.server.SQS.FeedMessage;
 
 public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
     private static AmazonS3 s3 = AmazonS3ClientBuilder
@@ -126,6 +130,25 @@ public class FeedDynamoDAO extends PagedDynamoDAO implements FeedDAO {
 //        }
 
         return true;
+    }
+
+    @Override
+    public void updateFeed(FeedMessage feedMsg) {
+        Table table = dynamoDB.getTable(TableName);
+        List<String> toAdd = feedMsg.getToUpdate();
+        Status post = feedMsg.getPost();
+        Collection<Item> items = new ArrayList<>();
+        for (int i = 0; i < toAdd.size(); ++i) {
+            Item item = new Item().withPrimaryKey("UserAlias", toAdd.get(i),
+                    "Timestamp", post.timestamp)
+                    .withString("post", post.getPost())
+                    .withString("creator", post.getUser().getAlias())
+                    .withList("urls", post.getUrls())
+                    .withList("mentions", post.getMentions());
+            items.add(item);
+        }
+        TableWriteItems batchWrite = new TableWriteItems(TableName).withItemsToPut(items);
+        dynamoDB.batchWriteItem(batchWrite);
     }
 
     public void removeAllFromFeed(String user, String target) {

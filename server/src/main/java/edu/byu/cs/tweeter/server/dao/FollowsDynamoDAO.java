@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -269,6 +270,8 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
     public void postUpdateFeedMessages(Status post) {
         final String sqsUrl = "https://sqs.us-west-2.amazonaws.com/287264978271/FeedUpdate";
         final int batchSize = 25;
+
+        //First time
         String creator = post.getUser().getAlias();
         Table table = dynamoDB.getTable(TableName);
         Index index = table.getIndex("follows_index");
@@ -295,8 +298,37 @@ public class FollowsDynamoDAO extends PagedDynamoDAO<User> implements FollowsDAO
                 .withMessageBody(json);
         AmazonSQS sqs = AmazonSQSClientBuilder.defaultClient();
         sqs.sendMessage(send);
-
         toUpdate.clear();
+
+        //Additional times if needed
+        Map<String, AttributeValue> lastKey = items.getLastLowLevelResult().getQueryResult().getLastEvaluatedKey();
+        while (lastKey != null) {
+            PrimaryKey key = new PrimaryKey("followee_handle", creator,
+                    "follower_handle", lastKey.get("follower_handle").getS());
+            query = query.withExclusiveStartKey(key);
+
+            items = index.query(query);
+            it = items.iterator();
+
+            while (it.hasNext()) {
+                Item curr = it.next();
+                toUpdate.add(curr.getString("follower_handle"));
+                System.out.println(curr.getString("follower_handle"));
+            }
+
+            msg = new FeedMessage(toUpdate, post);
+            json = gson.toJson(msg);
+
+            send = new SendMessageRequest()
+                    .withQueueUrl(sqsUrl)
+                    .withMessageBody(json);
+            sqs.sendMessage(send);
+            toUpdate.clear();
+
+            //lastKey = null;
+            lastKey = items.getLastLowLevelResult().getQueryResult().getLastEvaluatedKey();
+        }
+
     }
 
 

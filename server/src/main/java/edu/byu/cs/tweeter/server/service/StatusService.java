@@ -8,6 +8,7 @@ import edu.byu.cs.tweeter.model.net.request.StoryRequest;
 import edu.byu.cs.tweeter.model.net.response.FeedResponse;
 import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
 import edu.byu.cs.tweeter.model.net.response.StoryResponse;
+import edu.byu.cs.tweeter.server.SQS.FeedMessage;
 import edu.byu.cs.tweeter.server.dao.AuthTokenDAO;
 import edu.byu.cs.tweeter.server.dao.AuthTokenDynamoDAO;
 import edu.byu.cs.tweeter.server.dao.FeedDAO;
@@ -61,5 +62,9 @@ public class StatusService {
         return new PostStatusResponse(false);
     }
 
+    public void updateFeeds(FeedMessage feedMessage) {
+        FeedDAO fDAO = factory.getFeedDAO();
+        fDAO.updateFeed(feedMessage);
+    }
 
 }

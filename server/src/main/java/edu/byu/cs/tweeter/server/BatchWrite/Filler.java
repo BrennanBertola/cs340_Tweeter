@@ -56,9 +56,9 @@ public class Filler {
             userDAO.addUserBatch(users);
         }
         System.out.println("users added");
-//        if (followers.size() > 0) {
-//            followDAO.addFollowersBatch(followers, FOLLOW_TARGET);
-//        }
-//        System.out.println("followers added");
+        if (followers.size() > 0) {
+            followDAO.addFollowersBatch(followers, FOLLOW_TARGET);
+        }
+        System.out.println("followers added");
     }
 }
